@@ -1,5 +1,9 @@
 use macroquad::prelude::*;
 
+use crate::entitties::*;
+
+mod entitties;
+
 fn conf() -> Conf {
     Conf {
         window_title: String::from("Unsteel Chez"),
