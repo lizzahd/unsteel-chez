@@ -6,6 +6,7 @@ use crate::map_edit::*;
 
 pub const GRAVITY: f32 = 0.4;
 
+#[derive(Clone)]
 pub struct MovementSystem {
 	pub pos: Vec2,
 	pub vel: Vec2,

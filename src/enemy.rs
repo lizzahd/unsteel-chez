@@ -7,6 +7,7 @@ use crate::playa::*;
 use crate::level::*;
 use crate::map_edit::*;
 
+#[derive(Clone)]
 pub struct Enemy {
 	movement_system: MovementSystem,
 	hp: i32,
@@ -49,5 +50,9 @@ impl Entity for Enemy {
 
 	fn get_type(&self) -> Option<PlaceMode> {
 		Some(PlaceMode::SpawnGoblin)
+	}
+
+	fn box_clone(&self) -> Box<dyn Entity> {
+		Box::new(self.clone())
 	}
 }

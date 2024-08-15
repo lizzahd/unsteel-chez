@@ -41,4 +41,8 @@ impl<'a> Level<'a> {
 		draw_texture(&self.background, self.x / 2., 0., WHITE);
 		draw_texture(&self.foreground, self.x, 0., WHITE);
 	}
+
+	pub async fn clone(&self) -> Self {
+		Self::new(self.name).await
+	}
 }

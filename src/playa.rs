@@ -7,6 +7,7 @@ use crate::primimptnevs::*;
 use crate::level::*;
 use crate::map_edit::*;
 
+#[derive(Clone)]
 pub struct Player {
 	movement_system: MovementSystem,
 	pub hp: i32,
@@ -60,5 +61,9 @@ impl Entity for Player {
 
 	fn get_type(&self) -> Option<PlaceMode> {
 		Some(PlaceMode::SpawnPlayer)
+	}
+
+	fn box_clone(&self) -> Box<dyn Entity> {
+		Box::new(self.clone())
 	}
 }

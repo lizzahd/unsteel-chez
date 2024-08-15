@@ -17,4 +17,5 @@ pub trait Entity {
     fn get_hitbox(&self) -> Rect;
     fn get_pos(&self) -> Vec2;
     fn get_type(&self) -> Option<PlaceMode>;
+    fn box_clone(&self) -> Box<dyn Entity>;
 }

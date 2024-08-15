@@ -9,6 +9,7 @@ use crate::primimptnevs::*;
 use crate::enemy::*;
 use crate::level::*;
 use crate::map_edit::*;
+use crate::touchytouchy::*;
 
 mod entittie;
 mod playa;
@@ -17,6 +18,7 @@ mod primimptnevs;
 mod enemy;
 mod level;
 mod map_edit;
+mod touchytouchy;
 
 fn conf() -> Conf {
     Conf {
@@ -43,23 +45,46 @@ async fn arse() -> io::Result<()> {
     let file = File::open("maps/level_0/data")?;
     let reader = BufReader::new(file);
 
-    for line in reader.lines() {
+    let file = File::open(format!("maps/{}/data", level.name)).expect("Could not load file");
+    let reader = BufReader::new(file);
 
+    for l in reader.lines() {
+        let line = l.expect("Ass wipe");
+        let collection: Vec<&str> = line.split(" ").collect();
+        let (t, sx, sy, sw, sh) = match collection[..] {
+            [a, b, c, d, e] => (a, b, c, d, e),
+            _ => panic!("AAAAAAAAAAAAAA"),
+        };
+        match t {
+            "SpawnPlayer" => {
+                let x: f32 = sx.parse().expect("Error: Not a float");
+                let y: f32 = sy.parse().expect("Error: Not a float");
+                entities.push(Box::new(Player::new(vec2(x, y), &assets))); // player always gotta be first, bruv
+            },
+            "SpawnGoblin" => {
+                let x: f32 = sx.parse().expect("Error: Not a float");
+                let y: f32 = sy.parse().expect("Error: Not a float");
+                entities.push(Box::new(Enemy::new(vec2(x, y), &assets)));
+            },
+            "Platform" => {
+                let x: f32 = sx.parse().expect("Error: Not a float");
+                let y: f32 = sy.parse().expect("Error: Not a float");
+                let w: f32 = sw.parse().expect("Error: Not a float");
+                let h: f32 = sh.parse().expect("Error: Not a float");
+                level.collision.platforms.push(Rect::new(x, y, w, h));
+            },
+            "Hitbox" => {
+                let x: f32 = sx.parse().expect("Error: Not a float");
+                let y: f32 = sy.parse().expect("Error: Not a float");
+                let w: f32 = sw.parse().expect("Error: Not a float");
+                let h: f32 = sh.parse().expect("Error: Not a float");
+                level.collision.rect_hitboxes.push(Rect::new(x, y, w, h));
+            },
+            _ => { // should be Trigger_n<number>
+
+            }
+        }
     }
-
-    entities.push(Box::new(Player::new(vec2(64., 400.), &assets)));
-    entities.push(Box::new(Enemy::new(vec2(400., 300.), &assets)));
-
-    level.collision = Collision {
-        rect_hitboxes: vec![
-            Rect::new(256., 256., 32., 300.),
-        ],
-        platforms: vec![
-            Rect::new(0., 512., 1028., 1.),
-            Rect::new(256., 256., 32., 1.),
-            Rect::new(512., 350., 512., 1.),
-        ]
-    };
 
     let mut m_last_pos = mouse_position();
 
@@ -74,9 +99,6 @@ async fn arse() -> io::Result<()> {
 
         for entity in &mut entities {
             entity.update(&level);
-        }
-
-        for entity in &mut entities {
             entity.draw(&level);
         }
 

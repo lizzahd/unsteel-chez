@@ -9,6 +9,7 @@ use crate::assets::*;
 use crate::primimptnevs::*;
 use crate::enemy::*;
 use crate::level::*;
+use crate::touchytouchy::*;
 
 #[derive(Debug)]
 pub enum PlaceMode {
@@ -37,7 +38,7 @@ pub async fn level_edit() {
 
     let mut entities: Vec<Box<dyn Entity>> = Vec::new();
 
-    let mut level_0 = Level::new("level_0").await;
+    let mut level = Level::new("level_0").await;
 
     let mut m_last_pos = mouse_position();
 
@@ -57,9 +58,9 @@ pub async fn level_edit() {
     loop {
         clear_background(BLACK);
 
-        level_0.draw();
+        level.draw();
 
-        let scaled_m_pos = Vec2::from_array(mouse_position().into()) - vec2(level_0.x, 0.);
+        let scaled_m_pos = Vec2::from_array(mouse_position().into()) - vec2(level.x, 0.);
 
         if is_key_pressed(KeyCode::Key1) {
             current_place_mode = PlaceMode::Platform;
@@ -80,8 +81,8 @@ pub async fn level_edit() {
                 match current_place_mode {
                     PlaceMode::Platform => {
                         if let Some(pos) = last_pos {
-                            let r = Rect::new(pos.x - level_0.x, pos.y, scaled_m_pos.x - (pos.x - level_0.x), 32.);
-                            level_0.collision.platforms.push(r.clone());
+                            let r = Rect::new(pos.x - level.x, pos.y, scaled_m_pos.x - (pos.x - level.x), 32.);
+                            level.collision.platforms.push(r.clone());
                             last_pos = None;
                         } else {
                             last_pos = Some(Vec2::from_array(mouse_position().into()));
@@ -89,8 +90,8 @@ pub async fn level_edit() {
                     },
                     PlaceMode::Hitbox => {
                         if let Some(pos) = last_pos {
-                            let r = Rect::new(pos.x - level_0.x, pos.y, scaled_m_pos.x - (pos.x - level_0.x), scaled_m_pos.y - pos.y);
-                            level_0.collision.rect_hitboxes.push(r.clone());
+                            let r = Rect::new(pos.x - level.x, pos.y, scaled_m_pos.x - (pos.x - level.x), scaled_m_pos.y - pos.y);
+                            level.collision.rect_hitboxes.push(r.clone());
                             last_pos = None;
                         } else {
                             last_pos = Some(Vec2::from_array(mouse_position().into()));
@@ -98,25 +99,25 @@ pub async fn level_edit() {
                     },
                     PlaceMode::Remove => {
                         let mut to_remove: Vec<usize> = Vec::new();
-                        for i in 0..level_0.collision.rect_hitboxes.len() {
-                            if level_0.collision.rect_hitboxes[i].contains(scaled_m_pos) {
+                        for i in 0..level.collision.rect_hitboxes.len() {
+                            if level.collision.rect_hitboxes[i].contains(scaled_m_pos) {
                                 to_remove.push(i);
                             }
                         }
 
                         for i in to_remove {
-                            level_0.collision.rect_hitboxes.remove(i);
+                            level.collision.rect_hitboxes.remove(i);
                         }
 
                         to_remove = Vec::new();
-                        for i in 0..level_0.collision.platforms.len() {
-                            if level_0.collision.platforms[i].contains(scaled_m_pos) {
+                        for i in 0..level.collision.platforms.len() {
+                            if level.collision.platforms[i].contains(scaled_m_pos) {
                                 to_remove.push(i);
                             }
                         }
 
                         for i in to_remove {
-                            level_0.collision.platforms.remove(i);   
+                            level.collision.platforms.remove(i);   
                         }
 
                         to_remove = Vec::new();
@@ -164,7 +165,7 @@ pub async fn level_edit() {
                     },
                     PlaceMode::Trigger => {
                         if let Some(pos) = last_pos {
-                            let r = Rect::new(pos.x - level_0.x, pos.y, scaled_m_pos.x - (pos.x - level_0.x), scaled_m_pos.y - pos.y);
+                            let r = Rect::new(pos.x - level.x, pos.y, scaled_m_pos.x - (pos.x - level.x), scaled_m_pos.y - pos.y);
                             last_pos = None;
                             map_data.push((PlaceMode::Trigger_n(trigger_i), r));
                             trigger_i += 1;
@@ -178,7 +179,7 @@ pub async fn level_edit() {
             }
 
             if is_mouse_button_down(MouseButton::Middle) {
-                level_0.x += mouse_position().0 - m_last_pos.0;
+                level.x += mouse_position().0 - m_last_pos.0;
                 m_cool = false;
             }
         } else {
@@ -186,7 +187,7 @@ pub async fn level_edit() {
         }
 
         if is_key_down(KeyCode::LeftControl) {
-            if is_key_pressed(KeyCode::S) {
+            if is_key_pressed(KeyCode::S) { // save map
                 let mut data = String::new();
 
                 for entity in &mut entities {
@@ -200,11 +201,11 @@ pub async fn level_edit() {
                     }
                 }
 
-                for hitbox in &mut level_0.collision.rect_hitboxes {
+                for hitbox in &mut level.collision.rect_hitboxes {
                     map_data.push((PlaceMode::Hitbox, Rect::new(hitbox.x, hitbox.y, hitbox.w, hitbox.h)))
                 }
 
-                for platform in &mut level_0.collision.platforms {
+                for platform in &mut level.collision.platforms {
                     map_data.push((PlaceMode::Platform, Rect::new(platform.x, platform.y, platform.w, platform.h)))
                 }
 
@@ -212,12 +213,12 @@ pub async fn level_edit() {
                     data.push_str(&format!("{:?} {} {} {} {}\n", d.0, d.1.x, d.1.y, d.1.w, d.1.h));
                 }
 
-                fs::write(format!("maps/{}/data", level_0.name), data).expect("Unable to write to file");
-            } else if is_key_pressed(KeyCode::O) {
+                fs::write(format!("maps/{}/data", level.name), data).expect("Unable to write to file");
+            } else if is_key_pressed(KeyCode::O) { // load map
                 entities = Vec::new();
-                level_0.collision = Collision::new();
+                level.collision = Collision::new();
 
-                let file = File::open(format!("maps/{}/data", level_0.name)).expect("Could not load file");
+                let file = File::open(format!("maps/{}/data", level.name)).expect("Could not load file");
                 let reader = BufReader::new(file);
 
                 for l in reader.lines() {
@@ -243,39 +244,77 @@ pub async fn level_edit() {
                             let y: f32 = sy.parse().expect("Error: Not a float");
                             let w: f32 = sw.parse().expect("Error: Not a float");
                             let h: f32 = sh.parse().expect("Error: Not a float");
-                            level_0.collision.platforms.push(Rect::new(x, y, w, h));
+                            level.collision.platforms.push(Rect::new(x, y, w, h));
                         },
                         "Hitbox" => {
                             let x: f32 = sx.parse().expect("Error: Not a float");
                             let y: f32 = sy.parse().expect("Error: Not a float");
                             let w: f32 = sw.parse().expect("Error: Not a float");
                             let h: f32 = sh.parse().expect("Error: Not a float");
-                            level_0.collision.rect_hitboxes.push(Rect::new(x, y, w, h));
+                            level.collision.rect_hitboxes.push(Rect::new(x, y, w, h));
                         },
                         _ => { // should be Trigger_n<number>
 
                         }
                     }
                 }
+            } else if is_key_pressed(KeyCode::B) { // run map
+                let mut test_level = level.clone().await;
+                let mut test_entities: Vec<Box<dyn Entity>> = Vec::new();
+                
+                for entity in &entities {
+                    test_entities.push(entity.box_clone());
+                }
+
+                'test_loop: loop {
+                    clear_background(BLACK);
+
+                    test_level.draw();
+
+                    if is_mouse_button_down(MouseButton::Middle) {
+                        test_level.x += mouse_position().0 - m_last_pos.0;
+                    }
+
+                    for entity in &mut test_entities {
+                        entity.update(&test_level);
+                        entity.draw(&test_level);
+                    }
+
+                    for hitbox in &mut test_level.collision.rect_hitboxes {
+                        draw_rectangle_lines(hitbox.x + test_level.x, hitbox.y, hitbox.w, hitbox.h, 2., Color::from_rgba(0, 255, 0, 255));
+                    }
+
+                    for platform in &mut test_level.collision.platforms {
+                        draw_line(platform.x + test_level.x, platform.y, platform.x + platform.w + test_level.x, platform.y, 2., Color::from_rgba(255, 0, 0, 255));
+                    }
+
+                    if is_key_pressed(KeyCode::Escape) {
+                        break 'test_loop;
+                    }
+
+                    m_last_pos = mouse_position();
+
+                    next_frame().await;
+                }
             }
         }
 
         for entity in &mut entities {
-            entity.draw(&level_0);
+            entity.draw(&level);
         }
 
-        for hitbox in &mut level_0.collision.rect_hitboxes {
-            draw_rectangle_lines(hitbox.x + level_0.x, hitbox.y, hitbox.w, hitbox.h, 2., Color::from_rgba(0, 255, 0, 255));
+        for hitbox in &mut level.collision.rect_hitboxes {
+            draw_rectangle_lines(hitbox.x + level.x, hitbox.y, hitbox.w, hitbox.h, 2., Color::from_rgba(0, 255, 0, 255));
         }
 
-        for platform in &mut level_0.collision.platforms {
-            draw_line(platform.x + level_0.x, platform.y, platform.x + platform.w + level_0.x, platform.y, 2., Color::from_rgba(255, 0, 0, 255));
+        for platform in &mut level.collision.platforms {
+            draw_line(platform.x + level.x, platform.y, platform.x + platform.w + level.x, platform.y, 2., Color::from_rgba(255, 0, 0, 255));
         }
 
         for d in &map_data {
             match d.0 {
                 PlaceMode::Trigger_n(_) => {
-                    draw_rectangle_lines(d.1.x + level_0.x, d.1.y, d.1.w, d.1.h, 2., Color::from_rgba(255, 0, 255, 255));
+                    draw_rectangle_lines(d.1.x + level.x, d.1.y, d.1.w, d.1.h, 2., Color::from_rgba(255, 0, 255, 255));
                 },
                 _ => {}
             }
