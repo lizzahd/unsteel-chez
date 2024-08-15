@@ -1,11 +1,8 @@
 use macroquad::prelude::*;
 
-pub const GRAVITY: f32 = 0.4;
+use crate::level::*;
 
-pub struct Collision {
-	pub rect_hitboxes: Vec<Rect>, // only for horizontal and up
-	pub platforms: Vec<Rect>, // only for down, they are one way
-}
+pub const GRAVITY: f32 = 0.4;
 
 pub struct MovementSystem {
 	pub pos: Vec2,
@@ -36,10 +33,10 @@ impl MovementSystem {
 		}
 	}
 
-	pub fn update(&mut self, collision: &Collision) {
+	pub fn update(&mut self, level: &Level) {
 		self.grounded = false;
-        for platform in &collision.platforms {
-        	if self.vel.y > 0. {
+        for platform in &level.collision.platforms {
+        	if self.vel.y > 0. && self.pos.y + self.hitbox.h <= platform.y {
         		if Rect::new(self.pos.x, self.pos.y + self.vel.y, self.hitbox.w, self.hitbox.h).overlaps(platform) {
         			self.vel.y = 0.;
         			self.grounded = true;
@@ -50,7 +47,7 @@ impl MovementSystem {
 
         self.can_move_left = true;
         self.can_move_right = true;
-        for hitbox in &collision.rect_hitboxes {
+        for hitbox in &level.collision.rect_hitboxes {
         	if Rect::new(self.pos.x + self.vel.x, self.pos.y, self.hitbox.w, self.hitbox.h).overlaps(hitbox) {
         		if hitbox.y > self.pos.y + self.hitbox.h {
         			continue;
@@ -75,5 +72,13 @@ impl MovementSystem {
 
         self.pos += self.vel;
         self.vel.x /= self.move_acc_dampener;
+	}
+
+	fn get_hitbox(&self) -> Rect {
+		self.hitbox
+	}
+
+	fn get_pos(&self) -> Vec2 {
+		self.pos
 	}
 }

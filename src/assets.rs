@@ -9,12 +9,14 @@ pub struct AssetManager {
 // TODO: Optimize
 impl AssetManager {
     // This sucks up all assets from the assets folder into the game
-    pub async fn new() -> Self {
+    pub async fn new(path: &str) -> Self {
+        println!("{:?}", path);
+
         let mut manager = Self {
             images: HashMap::new(),
         };
 
-        let texture_paths = fs::read_dir("assets/images").unwrap();
+        let texture_paths = fs::read_dir(path).unwrap();
 
         for path in texture_paths {
             let p = path.unwrap().path();

@@ -4,10 +4,11 @@ use macroquad::prelude::*;
 use crate::entittie::*;
 use crate::assets::*;
 use crate::primimptnevs::*;
+use crate::level::*;
 
 pub struct Player {
 	movement_system: MovementSystem,
-	hp: i32,
+	pub hp: i32,
 	current_image: Texture2D,
 }
 
@@ -22,11 +23,11 @@ impl Player {
 }
 
 impl Entity for Player {
-	fn draw(&self) {
-		draw_texture(&self.current_image, self.movement_system.pos.x, self.movement_system.pos.y, WHITE);
+	fn draw(&self, level: &Level) {
+		draw_texture(&self.current_image, self.movement_system.pos.x + level.x, self.movement_system.pos.y, WHITE);
 	}
 
-	fn update(&mut self, collision: &Collision) {
+	fn update(&mut self, level: &Level) {
         if self.movement_system.grounded {
         	self.movement_system.vel.y = 0.;
         	if is_key_down(KeyCode::Space) {
@@ -45,6 +46,14 @@ impl Entity for Player {
             self.movement_system.vel.x += self.movement_system.move_acc;
         }
 
-        self.movement_system.update(collision)
+        self.movement_system.update(level)
+	}
+
+	fn get_hitbox(&self) -> Rect {
+		self.movement_system.hitbox
+	}
+
+	fn get_pos(&self) -> Vec2 {
+		self.movement_system.pos
 	}
 }

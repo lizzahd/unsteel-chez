@@ -3,6 +3,8 @@ use macroquad::prelude::*;
 use crate::primimptnevs::*;
 use crate::assets::*;
 use crate::entittie::*;
+use crate::playa::*;
+use crate::level::*;
 
 pub struct Enemy {
 	movement_system: MovementSystem,
@@ -21,17 +23,26 @@ impl Enemy {
 }
 
 impl Entity for Enemy {
-	fn update(&mut self, collision: &Collision) {
+	fn update(&mut self, level: &Level) {
 		if self.movement_system.grounded {
         	self.movement_system.vel.y = 0.;
         } else {
         	self.movement_system.vel.y += GRAVITY;
         }
 
-        self.movement_system.update(collision);
+		// behavior must go before this point
+        self.movement_system.update(level);
 	}
 
-	fn draw(&self) {
-		draw_texture(&self.current_image, self.movement_system.pos.x, self.movement_system.pos.y, WHITE);
+	fn draw(&self, level: &Level) {
+		draw_texture(&self.current_image, self.movement_system.pos.x + level.x, self.movement_system.pos.y, WHITE);
+	}
+
+	fn get_hitbox(&self) -> Rect {
+		self.movement_system.hitbox
+	}
+
+	fn get_pos(&self) -> Vec2 {
+		self.movement_system.pos
 	}
 }
