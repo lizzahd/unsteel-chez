@@ -133,6 +133,24 @@ pub async fn level_edit() {
                         for i in to_remove {
                             entities.remove(i);
                         }
+
+                        to_remove = Vec::new();
+                        for i in 1..map_data.len() {
+                            let d = &map_data[i];
+
+                            if Rect::new(d.1.x, d.1.y, d.1.w, d.1.h).contains(scaled_m_pos) {
+                                match d.0 {
+                                    PlaceMode::Trigger_n(_) => {
+                                        to_remove.push(i);
+                                    },
+                                    _ => {}
+                                }
+                            }
+                        }
+
+                        for i in to_remove {
+                            map_data.remove(i);
+                        }
                     },
                     PlaceMode::SpawnPlayer => {
                         if entities.len() > 0 {
