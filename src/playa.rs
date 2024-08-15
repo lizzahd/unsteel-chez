@@ -19,7 +19,7 @@ impl Player {
 	const MOVE_SPEED: f32 = 1.0;
     const MOVE_ACC: f32 = 0.5;
     const MOVE_ACC_DAMPENER: f32 = 1.1;
-    const JUMP_ACC: f32 = -20.;
+    const JUMP_ACC: f32 = -15.;
 
     const WIDTH: f32 = 100.;
     const HEIGHT: f32 = 100.;
