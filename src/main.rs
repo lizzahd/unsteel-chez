@@ -3,10 +3,12 @@ use macroquad::prelude::*;
 use crate::entittie::*;
 use crate::playa::*;
 use crate::assets::*;
+use crate::primimptnevs::*;
 
 mod entittie;
 mod playa;
 mod assets;
+mod primimptnevs;
 
 fn conf() -> Conf {
     Conf {
@@ -23,24 +25,34 @@ async fn main() {
     let assets = AssetManager::new().await;
 
     let mut entities: Vec<Box<dyn Entity>> = Vec::new();
-    entities.push(Box::new(Player::new(vec2(64., 64.), &assets)));
+    entities.push(Box::new(Player::new(vec2(64., 400.), &assets)));
 
-    let mut hitboxes: Vec<Rect> = Vec::new();
-    hitboxes.push(Rect::new(0., 0., 32., 64.));
+    let mut collision = Collision {
+        rect_hitboxes: vec![
+            Rect::new(256., 256., 32., 300.),
+        ],
+        platforms: vec![
+            Rect::new(0., 512., 256., 32.),
+        ]
+    };
 
     loop {
         clear_background(BLACK);
 
         for entity in &mut entities {
-            entity.update();
+            entity.update(&collision);
         }
 
         for entity in &mut entities {
             entity.draw();
         }
 
-        for hitbox in &mut hitboxes {
+        for hitbox in &mut collision.rect_hitboxes {
             draw_rectangle_lines(hitbox.x, hitbox.y, hitbox.w, hitbox.h, 2., Color::from_rgba(0, 255, 0, 255));
+        }
+
+        for platform in &mut collision.platforms {
+            draw_line(platform.x, platform.y, platform.x + platform.w, platform.y, 1., Color::from_rgba(0, 255, 0, 255));
         }
 
         next_frame().await;
