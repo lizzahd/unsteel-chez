@@ -1,12 +1,11 @@
 use std::fs;
 use std::fs::File;
-use std::io::{self, prelude::*, BufReader};
+use std::io::{prelude::*, BufReader};
 use macroquad::prelude::*;
 
 use crate::entittie::*;
 use crate::playa::*;
 use crate::assets::*;
-use crate::primimptnevs::*;
 use crate::enemy::*;
 use crate::level::*;
 use crate::touchytouchy::*;
@@ -18,8 +17,9 @@ pub enum PlaceMode {
     Remove,
     SpawnPlayer,
     SpawnGoblin,
+    Dawn,
     Trigger,
-    Trigger_n(u8),
+    TriggerN(u8),
 }
 
 fn is_trigger_n(value: u8) -> bool {
@@ -28,7 +28,7 @@ fn is_trigger_n(value: u8) -> bool {
 
 fn is_trigger_n_variant(place_mode: &PlaceMode, value: u8) -> bool {
     match place_mode {
-        PlaceMode::Trigger_n(v) => *v == value,
+        PlaceMode::TriggerN(v) => *v == value,
         _ => false,
     }
 }
@@ -73,6 +73,8 @@ pub async fn level_edit() {
         } else if is_key_pressed(KeyCode::Key5) {
             current_place_mode = PlaceMode::SpawnGoblin;
         } else if is_key_pressed(KeyCode::Key6) {
+            current_place_mode = PlaceMode::Dawn;
+        } else if is_key_pressed(KeyCode::Key7) {
             current_place_mode = PlaceMode::Trigger;
         }
 
@@ -140,7 +142,7 @@ pub async fn level_edit() {
 
                             if Rect::new(d.1.x, d.1.y, d.1.w, d.1.h).contains(scaled_m_pos) {
                                 match d.0 {
-                                    PlaceMode::Trigger_n(_) => {
+                                    PlaceMode::TriggerN(_) => {
                                         to_remove.push(i);
                                     },
                                     _ => {}
@@ -163,11 +165,14 @@ pub async fn level_edit() {
                     PlaceMode::SpawnGoblin => {
                         entities.push(Box::new(Enemy::new(scaled_m_pos, &assets)));
                     },
+                    PlaceMode::Dawn => {
+                        entities.push(Box::new(Dawn::new(scaled_m_pos, &assets)));
+                    },
                     PlaceMode::Trigger => {
                         if let Some(pos) = last_pos {
                             let r = Rect::new(pos.x - level.x, pos.y, scaled_m_pos.x - (pos.x - level.x), scaled_m_pos.y - pos.y);
                             last_pos = None;
-                            map_data.push((PlaceMode::Trigger_n(trigger_i), r));
+                            map_data.push((PlaceMode::TriggerN(trigger_i), r));
                             trigger_i += 1;
                         } else {
                             last_pos = Some(Vec2::from_array(mouse_position().into()));
@@ -253,7 +258,12 @@ pub async fn level_edit() {
                             let h: f32 = sh.parse().expect("Error: Not a float");
                             level.collision.rect_hitboxes.push(Rect::new(x, y, w, h));
                         },
-                        _ => { // should be Trigger_n<number>
+                        "Dawn" => {
+                            let x: f32 = sx.parse().expect("Error: Not a float");
+                            let y: f32 = sy.parse().expect("Error: Not a float");
+                            entities.push(Box::new(Dawn::new(vec2(x, y), &assets)));
+                        },
+                        _ => { // should be TriggerN<number>
 
                         }
                     }
@@ -313,7 +323,7 @@ pub async fn level_edit() {
 
         for d in &map_data {
             match d.0 {
-                PlaceMode::Trigger_n(_) => {
+                PlaceMode::TriggerN(_) => {
                     draw_rectangle_lines(d.1.x + level.x, d.1.y, d.1.w, d.1.h, 2., Color::from_rgba(255, 0, 255, 255));
                 },
                 _ => {}

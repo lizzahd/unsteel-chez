@@ -10,7 +10,6 @@ use crate::map_edit::*;
 #[derive(Clone)]
 pub struct Player {
 	movement_system: MovementSystem,
-	pub hp: i32,
 	current_image: Texture2D,
 }
 
@@ -18,7 +17,6 @@ impl Player {
 	pub fn new(pos: Vec2, assets: &AssetManager) -> Self {
 		Self {
 			movement_system: MovementSystem::new(pos, 1., 0.5, -15., Rect::new(0., 0., 100., 100.)),
-			hp: 5,
 			current_image: assets.images.get("assu-chan-alpha").unwrap().clone(),
 		}
 	}
