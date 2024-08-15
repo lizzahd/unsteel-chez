@@ -1,4 +1,5 @@
 use macroquad::prelude::*;
+
 use crate::primimptnevs::*;
 
 pub trait Entity {

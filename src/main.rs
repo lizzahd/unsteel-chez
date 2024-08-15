@@ -4,11 +4,13 @@ use crate::entittie::*;
 use crate::playa::*;
 use crate::assets::*;
 use crate::primimptnevs::*;
+use crate::enemy::*;
 
 mod entittie;
 mod playa;
 mod assets;
 mod primimptnevs;
+mod enemy;
 
 fn conf() -> Conf {
     Conf {
@@ -25,7 +27,9 @@ async fn main() {
     let assets = AssetManager::new().await;
 
     let mut entities: Vec<Box<dyn Entity>> = Vec::new();
+
     entities.push(Box::new(Player::new(vec2(64., 400.), &assets)));
+    entities.push(Box::new(Enemy::new(vec2(400., 300.), &assets)));
 
     let mut collision = Collision {
         rect_hitboxes: vec![
