@@ -15,7 +15,19 @@ enum PlaceMode {
     Remove,
     SpawnPlayer,
     SpawnGoblin,
-    Trigger(u8),
+    Trigger,
+    Trigger_n(u8),
+}
+
+fn is_trigger_n(value: u8) -> bool {
+    matches!(value, 0..=255)
+}
+
+fn is_trigger_n_variant(place_mode: &PlaceMode, value: u8) -> bool {
+    match place_mode {
+        PlaceMode::Trigger_n(v) => *v == value,
+        _ => false,
+    }
 }
 
 pub async fn level_edit() {
@@ -36,6 +48,8 @@ pub async fn level_edit() {
         (PlaceMode::SpawnPlayer, Rect::new(0., 0., 0., 0.)),
     ];
 
+    let mut trigger_i = 0;
+
     entities.push(Box::new(Player::new(vec2(0., 0.), &assets)));
 
     loop {
@@ -55,6 +69,8 @@ pub async fn level_edit() {
             current_place_mode = PlaceMode::SpawnPlayer;
         } else if is_key_pressed(KeyCode::Key5) {
             current_place_mode = PlaceMode::SpawnGoblin;
+        } else if is_key_pressed(KeyCode::Key6) {
+            current_place_mode = PlaceMode::Trigger;
         }
 
         if m_cool {
@@ -130,9 +146,17 @@ pub async fn level_edit() {
                         entities.push(Box::new(Enemy::new(scaled_m_pos, &assets)));
                         map_data.push((PlaceMode::SpawnGoblin, Rect::new(scaled_m_pos.x, scaled_m_pos.y, 0., 0.)));
                     },
-                    _ => {
-
-                    }
+                    PlaceMode::Trigger => {
+                        if let Some(pos) = last_pos {
+                            let r = Rect::new(pos.x - level_0.x, pos.y, scaled_m_pos.x - (pos.x - level_0.x), scaled_m_pos.y - pos.y);
+                            last_pos = None;
+                            map_data.push((PlaceMode::Trigger_n(trigger_i), r));
+                            trigger_i += 1
+                        } else {
+                            last_pos = Some(Vec2::from_array(mouse_position().into()));
+                        }
+                    },
+                    _ => {}
                 }
                 m_cool = false;
             }
@@ -167,6 +191,15 @@ pub async fn level_edit() {
 
         for platform in &mut level_0.collision.platforms {
             draw_line(platform.x + level_0.x, platform.y, platform.x + platform.w + level_0.x, platform.y, 2., Color::from_rgba(255, 0, 0, 255));
+        }
+
+        for d in &map_data {
+            match d.0 {
+                PlaceMode::Trigger_n(_) => {
+                    draw_rectangle_lines(d.1.x + level_0.x, d.1.y, d.1.w, d.1.h, 2., Color::from_rgba(255, 0, 255, 255));
+                },
+                _ => {}
+            }
         }
 
         m_last_pos = mouse_position();
