@@ -2,11 +2,11 @@ use macroquad::prelude::*;
 
 use crate::entittie::*;
 use crate::playa::*;
-use crate::utils::*;
+use crate::assets::*;
 
 mod entittie;
 mod playa;
-mod utils;
+mod assets;
 
 fn conf() -> Conf {
     Conf {
@@ -20,8 +20,10 @@ fn conf() -> Conf {
 
 #[macroquad::main(conf)]
 async fn main() {
+    let assets = AssetManager::new().await;
+
     let mut entities: Vec<Box<dyn Entity>> = Vec::new();
-    entities.push(Box::new(Player::new(vec2(64., 64.))));
+    entities.push(Box::new(Player::new(vec2(64., 64.), &assets)));
 
     let mut hitboxes: Vec<Rect> = Vec::new();
     hitboxes.push(Rect::new(0., 0., 32., 64.));
