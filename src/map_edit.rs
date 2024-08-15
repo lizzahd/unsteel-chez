@@ -9,7 +9,7 @@ use crate::enemy::*;
 use crate::level::*;
 
 #[derive(Debug)]
-enum PlaceMode {
+pub enum PlaceMode {
     Platform,
     Hitbox,
     Remove,
@@ -81,7 +81,6 @@ pub async fn level_edit() {
                             let r = Rect::new(pos.x - level_0.x, pos.y, scaled_m_pos.x - (pos.x - level_0.x), 32.);
                             level_0.collision.platforms.push(r.clone());
                             last_pos = None;
-                            map_data.push((PlaceMode::Platform, r));
                         } else {
                             last_pos = Some(Vec2::from_array(mouse_position().into()));
                         }
@@ -91,7 +90,6 @@ pub async fn level_edit() {
                             let r = Rect::new(pos.x - level_0.x, pos.y, scaled_m_pos.x - (pos.x - level_0.x), scaled_m_pos.y - pos.y);
                             level_0.collision.rect_hitboxes.push(r.clone());
                             last_pos = None;
-                            map_data.push((PlaceMode::Hitbox, r));
                         } else {
                             last_pos = Some(Vec2::from_array(mouse_position().into()));
                         }
@@ -101,7 +99,6 @@ pub async fn level_edit() {
                         for i in 0..level_0.collision.rect_hitboxes.len() {
                             if level_0.collision.rect_hitboxes[i].contains(scaled_m_pos) {
                                 to_remove.push(i);
-                                map_data.remove(i);
                             }
                         }
 
@@ -113,7 +110,6 @@ pub async fn level_edit() {
                         for i in 0..level_0.collision.platforms.len() {
                             if level_0.collision.platforms[i].contains(scaled_m_pos) {
                                 to_remove.push(i);
-                                map_data.remove(i);
                             }
                         }
 
@@ -126,12 +122,13 @@ pub async fn level_edit() {
                             let e = &entities[i];
                             if Rect::new(e.get_pos().x, e.get_pos().y, e.get_hitbox().w, e.get_hitbox().h).contains(scaled_m_pos) {
                                 to_remove.push(i);
-                                map_data.remove(i);
                             }
                         }
 
                         for i in to_remove {
-                            entities.remove(i);
+                            if i < entities.len() {
+                                entities.remove(i);
+                            }
                         }
 
                         to_remove = Vec::new();
@@ -162,14 +159,13 @@ pub async fn level_edit() {
                     },
                     PlaceMode::SpawnGoblin => {
                         entities.push(Box::new(Enemy::new(scaled_m_pos, &assets)));
-                        map_data.push((PlaceMode::SpawnGoblin, Rect::new(scaled_m_pos.x, scaled_m_pos.y, 0., 0.)));
                     },
                     PlaceMode::Trigger => {
                         if let Some(pos) = last_pos {
                             let r = Rect::new(pos.x - level_0.x, pos.y, scaled_m_pos.x - (pos.x - level_0.x), scaled_m_pos.y - pos.y);
                             last_pos = None;
                             map_data.push((PlaceMode::Trigger_n(trigger_i), r));
-                            trigger_i += 1
+                            trigger_i += 1;
                         } else {
                             last_pos = Some(Vec2::from_array(mouse_position().into()));
                         }
@@ -190,6 +186,25 @@ pub async fn level_edit() {
         if is_key_down(KeyCode::LeftControl) {
             if is_key_pressed(KeyCode::S) {
                 let mut data = String::new();
+
+                for entity in &mut entities {
+                    if let Some(t) = entity.get_type() {
+                        match t {
+                            PlaceMode::SpawnPlayer => continue,
+                            _ => ()
+                        }
+
+                        map_data.push((t, Rect::new(entity.get_pos().x, entity.get_pos().y, 0., 0.)))
+                    }
+                }
+
+                for hitbox in &mut level_0.collision.rect_hitboxes {
+                    map_data.push((PlaceMode::Hitbox, Rect::new(hitbox.x, hitbox.y, hitbox.w, hitbox.h)))
+                }
+
+                for platform in &mut level_0.collision.platforms {
+                    map_data.push((PlaceMode::Platform, Rect::new(platform.x, platform.y, platform.w, platform.h)))
+                }
 
                 for d in &map_data {
                     data.push_str(&format!("{:?} {} {} {} {}\n", d.0, d.1.x, d.1.y, d.1.w, d.1.h));

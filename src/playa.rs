@@ -5,6 +5,7 @@ use crate::entittie::*;
 use crate::assets::*;
 use crate::primimptnevs::*;
 use crate::level::*;
+use crate::map_edit::*;
 
 pub struct Player {
 	movement_system: MovementSystem,
@@ -55,5 +56,9 @@ impl Entity for Player {
 
 	fn get_pos(&self) -> Vec2 {
 		self.movement_system.pos
+	}
+
+	fn get_type(&self) -> Option<PlaceMode> {
+		Some(PlaceMode::SpawnPlayer)
 	}
 }

@@ -5,6 +5,7 @@ use crate::assets::*;
 use crate::entittie::*;
 use crate::playa::*;
 use crate::level::*;
+use crate::map_edit::*;
 
 pub struct Enemy {
 	movement_system: MovementSystem,
@@ -44,5 +45,9 @@ impl Entity for Enemy {
 
 	fn get_pos(&self) -> Vec2 {
 		self.movement_system.pos
+	}
+
+	fn get_type(&self) -> Option<PlaceMode> {
+		Some(PlaceMode::SpawnGoblin)
 	}
 }

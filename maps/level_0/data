@@ -1,3 +1,15 @@
 SpawnPlayer 0 0 0 0
-Trigger_n(0) 449 128 128 118
-Trigger_n(1) 760 282 69 107
+SpawnGoblin 702 466 0 0
+SpawnGoblin 664 466 0 0
+SpawnGoblin 507 451 0 0
+SpawnGoblin 490 405 0 0
+SpawnGoblin 489 395 0 0
+SpawnGoblin 545 389 0 0
+SpawnGoblin 555 399 0 0
+Hitbox 304 325 105 138
+Hitbox 603 165 212 117
+Hitbox 282 124 171 97
+Platform 469 304 269 32
+Platform 164 265 220 32
+Platform 175 326 213 32
+Platform 182 464 116 32

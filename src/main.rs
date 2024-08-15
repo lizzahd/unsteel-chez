@@ -43,9 +43,9 @@ async fn arse() -> io::Result<()> {
     let file = File::open("maps/level_0/data")?;
     let reader = BufReader::new(file);
 
-    // for line in read.lines() {
+    for line in reader.lines() {
 
-    // }
+    }
 
     entities.push(Box::new(Player::new(vec2(64., 400.), &assets)));
     entities.push(Box::new(Enemy::new(vec2(400., 300.), &assets)));

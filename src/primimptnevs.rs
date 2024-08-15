@@ -1,6 +1,8 @@
 use macroquad::prelude::*;
 
 use crate::level::*;
+use crate::entittie::*;
+use crate::map_edit::*;
 
 pub const GRAVITY: f32 = 0.4;
 
@@ -80,5 +82,9 @@ impl MovementSystem {
 
 	fn get_pos(&self) -> Vec2 {
 		self.pos
+	}
+
+	fn get_type(&self) -> Option<PlaceMode> {
+		None
 	}
 }
