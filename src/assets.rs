@@ -20,7 +20,13 @@ impl AssetManager {
 
         for path in texture_paths {
             let p = path.unwrap().path();
-            manager.images.insert(p.file_stem().unwrap().to_str().unwrap().to_string(), load_texture(p.to_str().unwrap()).await.unwrap());
+            if let Some(extension) = p.extension() {
+                if let Some(ext_str) = extension.to_str() {
+                    if ext_str == "png" {
+                        manager.images.insert(p.file_stem().unwrap().to_str().unwrap().to_string(), load_texture(p.to_str().unwrap()).await.unwrap());
+                    }
+                }
+            }
         }
 
         return manager;

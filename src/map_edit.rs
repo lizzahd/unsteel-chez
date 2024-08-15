@@ -8,6 +8,7 @@ use crate::primimptnevs::*;
 use crate::enemy::*;
 use crate::level::*;
 
+#[derive(Debug)]
 enum PlaceMode {
     Platform,
     Hitbox,
@@ -127,7 +128,7 @@ pub async fn level_edit() {
                     },
                     PlaceMode::SpawnGoblin => {
                         entities.push(Box::new(Enemy::new(scaled_m_pos, &assets)));
-                        map_data.push((PlaceMode::SpawnPlayer, Rect::new(scaled_m_pos.x, scaled_m_pos.y, 0., 0.)));
+                        map_data.push((PlaceMode::SpawnGoblin, Rect::new(scaled_m_pos.x, scaled_m_pos.y, 0., 0.)));
                     },
                     _ => {
 
@@ -148,7 +149,11 @@ pub async fn level_edit() {
             if is_key_pressed(KeyCode::S) {
                 let mut data = String::new();
 
-                
+                for d in &map_data {
+                    data.push_str(&format!("{:?} {} {} {} {}\n", d.0, d.1.x, d.1.y, d.1.w, d.1.h));
+                }
+
+                fs::write(format!("maps/{}/data", level_0.name), data).expect("Unable to write to file");
             }
         }
 

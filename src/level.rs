@@ -16,23 +16,24 @@ impl Collision {
 	}
 }
 
-pub struct Level {
+pub struct Level<'a> {
 	pub collision: Collision,
 	pub foreground: Texture2D,
 	pub background: Texture2D,
 	pub x: f32,
+	pub name: &'a str,
 }
 
-impl Level {
-	pub async fn new(name: &str) -> Self {
-		let mut collision = Collision::new();
+impl<'a> Level<'a> {
+	pub async fn new(name: &'a str) -> Self {
 		let map_assets = AssetManager::new(&format!("maps/{}", name)).await;
 		
 		Self {
-			collision,
+			collision: Collision::new(),
 			foreground: map_assets.images.get("foreground").unwrap().clone(),
 			background: map_assets.images.get("background").unwrap().clone(),
 			x: 0.,
+			name,
 		}
 	}
 
