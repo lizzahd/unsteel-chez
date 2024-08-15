@@ -1,8 +1,8 @@
 use macroquad::prelude::*;
 
-use crate::entitties::*;
+use crate::entittie::*;
 
-mod entitties;
+mod entittie;
 
 fn conf() -> Conf {
     Conf {

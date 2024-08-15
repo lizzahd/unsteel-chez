@@ -1,4 +1,4 @@
-trait Entity {
-    draw(&self);
-    update(&mut self);
+pub trait Entity {
+    fn draw(&self);
+    fn update(&mut self);
 }
