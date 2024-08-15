@@ -1,4 +1,6 @@
 use std::fs;
+use std::fs::File;
+use std::io::{self, prelude::*, BufReader};
 use macroquad::prelude::*;
 
 use crate::entittie::*;
@@ -211,6 +213,50 @@ pub async fn level_edit() {
                 }
 
                 fs::write(format!("maps/{}/data", level_0.name), data).expect("Unable to write to file");
+            } else if is_key_pressed(KeyCode::O) {
+                entities = Vec::new();
+                level_0.collision = Collision::new();
+
+                let file = File::open(format!("maps/{}/data", level_0.name)).expect("Could not load file");
+                let reader = BufReader::new(file);
+
+                for l in reader.lines() {
+                    let line = l.expect("Ass wipe");
+                    let collection: Vec<&str> = line.split(" ").collect();
+                    let (t, sx, sy, sw, sh) = match collection[..] {
+                        [a, b, c, d, e] => (a, b, c, d, e),
+                        _ => panic!("AAAAAAAAAAAAAA"),
+                    };
+                    match t {
+                        "SpawnPlayer" => {
+                            let x: f32 = sx.parse().expect("Error: Not a float");
+                            let y: f32 = sy.parse().expect("Error: Not a float");
+                            entities.push(Box::new(Player::new(vec2(x, y), &assets))); // player always gotta be first, bruv
+                        },
+                        "SpawnGoblin" => {
+                            let x: f32 = sx.parse().expect("Error: Not a float");
+                            let y: f32 = sy.parse().expect("Error: Not a float");
+                            entities.push(Box::new(Enemy::new(vec2(x, y), &assets)));
+                        },
+                        "Platform" => {
+                            let x: f32 = sx.parse().expect("Error: Not a float");
+                            let y: f32 = sy.parse().expect("Error: Not a float");
+                            let w: f32 = sw.parse().expect("Error: Not a float");
+                            let h: f32 = sh.parse().expect("Error: Not a float");
+                            level_0.collision.platforms.push(Rect::new(x, y, w, h));
+                        },
+                        "Hitbox" => {
+                            let x: f32 = sx.parse().expect("Error: Not a float");
+                            let y: f32 = sy.parse().expect("Error: Not a float");
+                            let w: f32 = sw.parse().expect("Error: Not a float");
+                            let h: f32 = sh.parse().expect("Error: Not a float");
+                            level_0.collision.rect_hitboxes.push(Rect::new(x, y, w, h));
+                        },
+                        _ => { // should be Trigger_n<number>
+
+                        }
+                    }
+                }
             }
         }
 

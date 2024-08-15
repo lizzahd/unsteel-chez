@@ -10,8 +10,6 @@ pub struct AssetManager {
 impl AssetManager {
     // This sucks up all assets from the assets folder into the game
     pub async fn new(path: &str) -> Self {
-        println!("{:?}", path);
-
         let mut manager = Self {
             images: HashMap::new(),
         };

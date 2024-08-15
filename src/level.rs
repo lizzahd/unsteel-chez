@@ -8,7 +8,7 @@ pub struct Collision {
 }
 
 impl Collision {
-	fn new() -> Self {
+	pub fn new() -> Self {
 		Self {
 			rect_hitboxes: Vec::new(),
 			platforms: Vec::new(),
