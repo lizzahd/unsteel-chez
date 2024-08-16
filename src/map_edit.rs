@@ -21,7 +21,6 @@ pub enum PlaceMode {
     Dawn,
     Trigger,
     Projectile,
-    TriggerN(u8),
 }
 
 pub async fn level_edit() {
@@ -42,8 +41,6 @@ pub async fn level_edit() {
     let mut map_data: Vec<(PlaceMode, Rect)> = vec![
         (PlaceMode::SpawnPlayer, Rect::new(player_start.x, player_start.y, 0., 0.)),
     ];
-
-    let mut trigger_i = 0;
 
     entities.push(Box::new(Player::new(vec2(0., 0.), &assets)));
 
@@ -75,8 +72,8 @@ pub async fn level_edit() {
                 match current_place_mode {
                     PlaceMode::Platform => {
                         if let Some(pos) = last_pos {
-                            let mut x = pos.x - level.x;
-                            let mut w = scaled_m_pos.x - (pos.x - level.x);
+                            let mut x = pos.x;
+                            let mut w = scaled_m_pos.x - pos.x;
                             
                             if w < 0. {
                                 w = w.abs();
@@ -87,7 +84,7 @@ pub async fn level_edit() {
                             level.collision.platforms.push(r.clone());
                             last_pos = None;
                         } else {
-                            last_pos = Some(Vec2::from_array(mouse_position().into()));
+                            last_pos = Some(Vec2::from_array(scaled_m_pos.into()));
                         }
                     },
                     PlaceMode::Hitbox => {
@@ -156,7 +153,7 @@ pub async fn level_edit() {
 
                             if Rect::new(d.1.x, d.1.y, d.1.w, d.1.h).contains(scaled_m_pos) {
                                 match d.0 {
-                                    PlaceMode::TriggerN(_) => {
+                                    PlaceMode::Trigger => {
                                         to_remove.push(i);
                                     },
                                     _ => {}
@@ -202,8 +199,7 @@ pub async fn level_edit() {
 
                             let r = Rect::new(x, y, w, h);
                             last_pos = None;
-                            map_data.push((PlaceMode::TriggerN(trigger_i), r));
-                            trigger_i += 1;
+                            map_data.push((PlaceMode::Trigger, r));
                         } else {
                             last_pos = Some(Vec2::from_array(mouse_position().into()));
                         }
@@ -296,7 +292,7 @@ pub async fn level_edit() {
                             let y: f32 = sy.parse().expect("Error: Not a float");
                             entities.push(Box::new(Dawn::new(vec2(x, y), &assets)));
                         },
-                        _ => { // should be TriggerN<number>
+                        _ => {
 
                         }
                     }
@@ -403,7 +399,7 @@ pub async fn level_edit() {
 
         for d in &map_data {
             match d.0 {
-                PlaceMode::TriggerN(_) => {
+                PlaceMode::Trigger => {
                     draw_rectangle_lines(d.1.x + level.x, d.1.y, d.1.w, d.1.h, 2., Color::from_rgba(255, 0, 255, 255));
                 },
                 _ => {}
