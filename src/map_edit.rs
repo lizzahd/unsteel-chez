@@ -268,8 +268,8 @@ pub async fn level_edit() {
                         }
                     }
                 }
-            } else if is_key_pressed(KeyCode::B) { // run map
-                let mut test_level = level.clone().await;
+            } else if is_key_pressed(KeyCode::B) { // test map
+                let mut test_level = level.clone();
                 let mut test_entities: Vec<Box<dyn Entity>> = Vec::new();
                 
                 for entity in &entities {

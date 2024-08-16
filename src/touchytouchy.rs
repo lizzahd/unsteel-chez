@@ -20,7 +20,7 @@ impl Dawn {
 			anim_t: 0.,
 			pos,
 			current_image: assets.images.get("dawn").unwrap().clone(),
-			hitbox: Rect::new(pos.x, pos.y, 50., 109.)
+			hitbox: Rect::new(pos.x, pos.y, 50., 109.),
 		}
 	}
 }

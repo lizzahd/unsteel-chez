@@ -2,6 +2,7 @@ use macroquad::prelude::*;
 
 use crate::assets::*;
 
+#[derive(Clone)]
 pub struct Collision {
 	pub rect_hitboxes: Vec<Rect>, // only for horizontal and up
 	pub platforms: Vec<Rect>, // only for down, they are one way
@@ -42,7 +43,13 @@ impl<'a> Level<'a> {
 		draw_texture(&self.foreground, self.x, 0., WHITE);
 	}
 
-	pub async fn clone(&self) -> Self {
-		Self::new(self.name).await
+	pub fn clone(&self) -> Self {
+		Self {
+			collision: self.collision.clone(),
+			name: self.name,
+			foreground: self.foreground.clone(),
+			background: self.background.clone(),
+			x: 0.,
+		}
 	}
 }
