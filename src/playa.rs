@@ -8,11 +8,13 @@ use crate::level::*;
 use crate::map_edit::*;
 use crate::event::*;
 
+// HEHEHEHEHEHEHEHEHE
 #[derive(Clone)]
 pub struct Fart {
 	pos: Vec2,
 	vel: Vec2,
 	hitbox: Rect,
+	// how long the fart lasts
 	lifetime: i32,
 	current_image: Texture2D,
 	pub dead: bool,
@@ -23,6 +25,7 @@ impl Fart {
 	pub fn new(pos: Vec2, d: f32, assets: &AssetManager) -> Self {
 		Self {
 			pos,
+			// moves only horizontally
 			vel: vec2(d * Self::SPEED, 0.),
 			hitbox: Rect::new(pos.x, pos.y, 50., 50.),
 			lifetime: 50,
@@ -54,6 +57,7 @@ impl Entity for Fart {
 
 		self.lifetime -= 1;
 		if self.lifetime <= 0 {
+			// fart dissipates
 			self.dead = true;
 		}
 
@@ -81,6 +85,7 @@ impl Entity for Fart {
 			return None;
 		}
 
+		// check if its touchin an enemy
 		for entity in entities.iter() {
 			if let Some(t) = entity.get_type() {
 				match t {
@@ -113,6 +118,7 @@ impl Entity for Fart {
 pub struct Player {
 	movement_system: MovementSystem,
 	current_image: Texture2D,
+	// ching chong must be drawn seperately due to hitbox problems
 	label_image: Texture2D,
 	dead: bool,
 	flipped: bool,
@@ -141,8 +147,10 @@ impl Entity for Player {
 	}
 
 	fn update(&mut self, level: &Level) -> Option<EventType> {
+		// EventType to be returned, if at all
 		let mut r_event: Option<EventType> = None;
 
+		// JUMPIES
         if self.movement_system.grounded {
         	self.movement_system.vel.y = 0.;
         	if is_key_down(KeyCode::Space) {
@@ -154,15 +162,18 @@ impl Entity for Player {
 
         if is_key_down(KeyCode::A) && self.movement_system.can_move_left {
             self.movement_system.pos.x -= self.movement_system.move_speed;
+            // this makes it all smooth and stuff
             self.movement_system.vel.x -= self.movement_system.move_acc;
             self.flipped = true;
         }
         if is_key_down(KeyCode::D) && self.movement_system.can_move_right {
             self.movement_system.pos.x += self.movement_system.move_speed;
+            // this makes it all smooth and stuff
             self.movement_system.vel.x += self.movement_system.move_acc;
             self.flipped = false;
         }
 
+        // face towards the mouse
         self.flipped = if mouse_position().0 < self.get_pos().x + level.x {
         	true
         } else {
@@ -170,17 +181,21 @@ impl Entity for Player {
         };
 
         if is_mouse_button_pressed(MouseButton::Left) {
+        	// get fard direction
         	let d = if self.flipped {
         		-1.
         	} else {
         		1.
         	};
 
+        	// fard.
         	r_event = Some(EventType::SpawnFart{pos: self.get_center(), d})
         }
 
+        // handle physics and stuff
         self.movement_system.update(level);
 
+        // return produced event
         return r_event;
 	}
 
@@ -205,16 +220,19 @@ impl Entity for Player {
 		for entity in entities.iter() {
 			if let Some(t) = entity.get_type() {
 				match t {
+					// pick up some soap, that you hopefully didn't drop
 					PlaceMode::Dawn => {
 						if entity.get_hitbox().overlaps(&self.get_hitbox()) {
 							return Some(EventType::Pickup{pos: self.get_center()});
 						}
 					},
+					// get touched by goblins
 					PlaceMode::SpawnGoblin => {
 						if entity.get_hitbox().overlaps(&self.get_hitbox()) {
 							return Some(EventType::KillPlayer);
 						}
 					},
+					// this is for preventing the player from touching himself
 					PlaceMode::SpawnPlayer => {
 						continue;
 					},
@@ -229,6 +247,7 @@ impl Entity for Player {
 
 	fn give_event(&mut self, event: &EventType) {
 		match event {
+			// make the player die
 			EventType::KillPlayer => {
 				self.dead = true;
 				return;
@@ -239,6 +258,7 @@ impl Entity for Player {
 	}
 
 	fn get_dead(&self) -> bool {
+		// ded
 		self.dead
 	}
 }

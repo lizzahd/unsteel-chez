@@ -64,6 +64,7 @@ impl Entity for Enemy {
 
 	fn give_event(&mut self, event: &EventType) {
 		match event {
+			// get killed by damage
 			EventType::Damage{pos} => {
 				if self.get_hitbox().contains(*pos) {
 					self.dead = true;

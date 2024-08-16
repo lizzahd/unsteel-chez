@@ -21,15 +21,18 @@ pub struct Level<'a> {
 	pub collision: Collision,
 	pub foreground: Texture2D,
 	pub background: Texture2D,
+	// for camera effects
 	pub x: f32,
 	pub name: &'a str,
 }
 
 impl<'a> Level<'a> {
 	pub async fn new(name: &'a str) -> Self {
+		// get foreground and background
 		let map_assets = AssetManager::new(&format!("maps/{}", name)).await;
 		
 		Self {
+			// just empty vectors of Rects
 			collision: Collision::new(),
 			foreground: map_assets.images.get("foreground").unwrap().clone(),
 			background: map_assets.images.get("background").unwrap().clone(),

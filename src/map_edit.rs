@@ -34,14 +34,20 @@ pub async fn level_edit() {
     let mut current_place_mode = PlaceMode::Platform;
 
     let mut player_start = vec2(0., 0.);
+
+    // mostly deals with saving and loading
     let mut map_data: Vec<(PlaceMode, Rect)> = vec![
         (PlaceMode::SpawnPlayer, Rect::new(player_start.x, player_start.y, 0., 0.)),
     ];
 
+    // spawn the player. must always be the first index of the vec
     entities.push(Box::new(Player::new(vec2(0., 0.), &assets)));
 
+    // previous mouse position
     let mut m_last_pos = mouse_position();
+    // last clicked position
     let mut last_pos: Option<Vec2> = None;
+    // input cooldown to prevent rapid spamming
     let mut m_cool = true;
 
     let mut level_scroll_boost = 1.;
@@ -52,6 +58,7 @@ pub async fn level_edit() {
 
         level.draw();
 
+        // get the mouse position scaled to the "camera"
         let scaled_m_pos = Vec2::from_array(mouse_position().into()) - vec2(level.x, 0.);
 
         if is_key_pressed(KeyCode::Key1) {
@@ -69,6 +76,7 @@ pub async fn level_edit() {
         } else if is_key_pressed(KeyCode::Key7) {
             current_place_mode = PlaceMode::Trigger;
         } else if is_key_pressed(KeyCode::Space) {
+            // center on the player
             level.x = (screen_width() / 2.) - entities[0].get_pos().x;
         }
 
@@ -77,6 +85,7 @@ pub async fn level_edit() {
                 match current_place_mode {
                     PlaceMode::Platform => {
                         if let Some(pos) = last_pos {
+                            // allow it to be placed in any order
                             let mut x = pos.x;
                             let mut w = scaled_m_pos.x - pos.x;
                             
@@ -94,6 +103,7 @@ pub async fn level_edit() {
                     },
                     PlaceMode::Hitbox => {
                         if let Some(pos) = last_pos {
+                            // allow it to be placed in any order
                             let mut x = pos.x;
                             let mut y = pos.y;
                             let mut w = scaled_m_pos.x - pos.x;
@@ -110,6 +120,7 @@ pub async fn level_edit() {
 
                             let r = Rect::new(x, y, w, h);
                             level.collision.rect_hitboxes.push(r.clone());
+                            // put a walkable platform on top of it
                             level.collision.platforms.push(Rect::new(x, y - 1., w, 32.));
                             last_pos = None;
                         } else {
@@ -117,6 +128,7 @@ pub async fn level_edit() {
                         }
                     },
                     PlaceMode::Remove => {
+                        // anything that is added to this vec gets removed once the loops are finished
                         let mut to_remove: Vec<usize> = Vec::new();
                         for i in 0..level.collision.rect_hitboxes.len() {
                             if level.collision.rect_hitboxes[i].contains(scaled_m_pos) {
@@ -172,13 +184,16 @@ pub async fn level_edit() {
                         }
                     },
                     PlaceMode::SpawnPlayer => {
+                        // ensure the player is first in the vec
                         if entities.len() > 0 {
                             entities[0] = Box::new(Player::new(scaled_m_pos, &assets));
                         } else {
                             entities.push(Box::new(Player::new(scaled_m_pos, &assets)));
                         }
+
                         player_start.x = scaled_m_pos.x;
                         player_start.y = scaled_m_pos.y;
+                        // critical to update map_data's instance of the player
                         map_data[0] = (PlaceMode::SpawnPlayer, Rect::new(scaled_m_pos.x, scaled_m_pos.y, 0., 0.));
                     },
                     PlaceMode::SpawnGoblin => {
@@ -188,6 +203,7 @@ pub async fn level_edit() {
                         entities.push(Box::new(Dawn::new(scaled_m_pos, &assets)));
                     },
                     PlaceMode::Trigger => {
+                        // exactly the same as a hitbox, but with no collision
                         if let Some(pos) = last_pos {
                             let mut x = pos.x - level.x;
                             let mut y = pos.y;
@@ -215,6 +231,7 @@ pub async fn level_edit() {
                 m_cool = false;
             }
 
+            // pan the camera
             if is_mouse_button_down(MouseButton::Middle) {
                 level.x += mouse_position().0 - m_last_pos.0;
                 m_cool = false;
@@ -225,8 +242,10 @@ pub async fn level_edit() {
 
         if is_key_down(KeyCode::LeftControl) {
             if is_key_pressed(KeyCode::S) { // save map
+                // clear data. player does not need to be in it right off the bat, since he will be added first in the loop
                 let mut data = String::new();
 
+                // add everything to data
                 for entity in &mut entities {
                     if let Some(t) = entity.get_type() {
                         match t {
@@ -252,22 +271,27 @@ pub async fn level_edit() {
 
                 fs::write(format!("maps/{}/data", level.name), data).expect("Unable to write to file");
             } else if is_key_pressed(KeyCode::O) { // load map
+                // reinitialize map_data with the player in the first index
                 map_data = vec![
                     (PlaceMode::SpawnPlayer, Rect::new(player_start.x, player_start.y, 0., 0.)),
                 ];
                 entities = Vec::new();
                 level.collision = Collision::new();
 
+                // load the data file
                 let file = File::open(format!("maps/{}/data", level.name)).expect("Could not load file");
                 let reader = BufReader::new(file);
 
                 for l in reader.lines() {
+                    // split the line and convert it to a usable tuple
                     let line = l.expect("Ass wipe");
                     let collection: Vec<&str> = line.split(" ").collect();
                     let (t, sx, sy, sw, sh) = match collection[..] {
                         [a, b, c, d, e] => (a, b, c, d, e),
                         _ => panic!("AAAAAAAAAAAAAA"),
                     };
+
+                    // parse the `data` file and spawn in necessary stuff
                     match t {
                         "SpawnPlayer" => {
                             let x: f32 = sx.parse().expect("Error: Not a float");
@@ -304,6 +328,7 @@ pub async fn level_edit() {
                     }
                 }
             } else if is_key_pressed(KeyCode::B) { // test map
+                // copy all vectors to test variants, so it can be reset easily
                 let mut test_level = level.clone();
                 let mut test_entities: Vec<Box<dyn Entity>> = Vec::new();
 
@@ -326,7 +351,9 @@ pub async fn level_edit() {
                         test_level.x += mouse_position().0 - m_last_pos.0;
                     }
 
+                    // queue of entities that need to be spawned
                     let mut to_spawn: Vec<Box<dyn Entity>> = Vec::new();
+                    // a vec of events that have already been enacted
                     let mut covered_events: Vec<usize> = Vec::new();
                     for entity in test_entities.iter_mut() {
                         let result = entity.update(&test_level);
@@ -346,15 +373,20 @@ pub async fn level_edit() {
                                 _ => {}
                             }
 
+                            // let entities interact with events
                             entity.give_event(event);
                         }
                     }
 
+                    // spawn queued entities
                     for entity in to_spawn {
                         test_entities.push(entity);
                     }
 
+                    // reset events vec
                     test_events = Vec::new();
+
+                    // queue of entities that will be despawned
                     let mut to_kill: Vec<usize> = Vec::new();
 
                     for (i, entity) in test_entities.iter().enumerate() {
@@ -363,6 +395,7 @@ pub async fn level_edit() {
                             continue;
                         }
 
+                        // let entities look at other entities
                         let result = entity.give_data(&test_level, &test_entities);
                         if let Some(t) = result {
                             test_events.push(t)
@@ -370,6 +403,7 @@ pub async fn level_edit() {
                         entity.draw(&test_level);
                     }
 
+                    // despawn queued entities
                     for i in to_kill {
                         if i < test_entities.len() {
                             test_entities.remove(i);
@@ -389,17 +423,20 @@ pub async fn level_edit() {
                         break 'test_loop;
                     }
 
+                    // set the last mouse position
                     m_last_pos = mouse_position();
 
                     next_frame().await;
                 }
             }
+        // pan the camera
         } else if is_key_down(KeyCode::A) {
             level.x += LEVEL_SCROLL_SPEED * level_scroll_boost;
         } else if is_key_down(KeyCode::D) {
             level.x -= LEVEL_SCROLL_SPEED * level_scroll_boost;
         }
 
+        // make camera go FAST
         if is_key_down(KeyCode::LeftShift) {
             level_scroll_boost = 2.;
         } else {

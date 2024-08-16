@@ -15,7 +15,9 @@ pub struct MovementSystem {
 	pub can_move_left: bool,
 	pub can_move_right: bool,
 	pub move_speed: f32,
+	// makes stuff more smooth
     pub move_acc: f32,
+    // slows the player down over time, instead of stopping suddenly
     pub move_acc_dampener: f32,
     pub jump_acc: f32,
     pub hitbox: Rect,
@@ -38,7 +40,9 @@ impl MovementSystem {
 	}
 
 	pub fn update(&mut self, level: &Level) {
+		// false is the default for grounded
 		self.grounded = false;
+		// check for a floor only below the player and stops fall, but does not snap
         for platform in &level.collision.platforms {
         	if self.vel.y > 0. && self.pos.y + self.hitbox.h <= platform.y {
         		if Rect::new(self.pos.x + 1., self.pos.y + self.vel.y, self.hitbox.w - 2., self.hitbox.h).overlaps(platform) {
@@ -53,16 +57,19 @@ impl MovementSystem {
         self.can_move_right = true;
         for hitbox in &level.collision.rect_hitboxes {
         	if Rect::new(self.pos.x + self.vel.x, self.pos.y, self.hitbox.w, self.hitbox.h).overlaps(hitbox) {
+        		// if it is too far below it gets skipped
         		if hitbox.y > self.pos.y + self.hitbox.h {
         			continue;
         		}
 
+        		// get above collision and snap accordingly
     			if hitbox.left() <= self.pos.x && self.pos.x + self.hitbox.w <= hitbox.right() {
 	        		self.vel.y = 0.;
 	        		self.pos.y = hitbox.bottom() + 1.;
 	        		continue;
 	        	}
 
+	        	// get left and right collision and snap accordingly
     			if self.vel.x > 0. {
     				self.pos.x = hitbox.left() - self.hitbox.w;
 	    			self.can_move_right = false;
@@ -77,11 +84,13 @@ impl MovementSystem {
         self.pos += self.vel;
         self.vel.x /= self.move_acc_dampener;
 
+        // updates hitbox
         self.hitbox.x = self.pos.x;
         self.hitbox.y = self.pos.y;
 	}
 
 	pub fn get_center(&self) -> Vec2 {
+		// center of entity
 		self.pos + vec2(self.hitbox.w / 2., self.hitbox.h / 2.)
 	}
 }

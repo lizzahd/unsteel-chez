@@ -7,12 +7,15 @@ use crate::map_edit::*;
 use crate::assets::*;
 use crate::event::*;
 
+// dish soap hehehehhehe
 #[derive(Clone)]
 pub struct Dawn {
+	// time variable for animation stuff
 	anim_t: f32,
 	pos: Vec2,
 	current_image: Texture2D,
 	hitbox: Rect,
+	// also means not_active in the case of soap
 	dead: bool,
 }
 
@@ -34,6 +37,7 @@ impl Entity for Dawn {
 	}
 
 	fn update(&mut self, _level: &Level) -> Option<EventType> {
+		// increase time variable
 		self.anim_t += 1.;
 
 		None
@@ -59,6 +63,7 @@ impl Entity for Dawn {
 		None
 	}
 
+	// check if the player is touchin it
 	fn give_event(&mut self, event: &EventType) {
 		match event {
 			EventType::Pickup{pos} => {
