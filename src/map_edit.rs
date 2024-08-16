@@ -20,6 +20,7 @@ pub enum PlaceMode {
     SpawnGoblin,
     Dawn,
     Trigger,
+    Projectile,
     TriggerN(u8),
 }
 
@@ -277,11 +278,32 @@ pub async fn level_edit() {
                         test_level.x += mouse_position().0 - m_last_pos.0;
                     }
 
+                    let mut to_spawn: Vec<Box<dyn Entity>> = Vec::new();
+                    let mut covered_events: Vec<usize> = Vec::new();
                     for entity in test_entities.iter_mut() {
-                        entity.update(&test_level);
-                        for event in &test_events {
+                        let result = entity.update(&test_level);
+                        if let Some(e) = result {
+                            test_events.push(e);
+                        }
+
+                        for (i, event) in (&test_events).iter().enumerate() {
+                            // Handle spawn events
+                            match event {
+                                EventType::SpawnFart{pos, d} => {
+                                    if !covered_events.contains(&i) {
+                                        to_spawn.push(Box::new(Fart::new(*pos, *d, &assets)));
+                                        covered_events.push(i);
+                                    }
+                                },
+                                _ => {}
+                            }
+
                             entity.give_event(event);
                         }
+                    }
+
+                    for entity in to_spawn {
+                        test_entities.push(entity);
                     }
 
                     test_events = Vec::new();

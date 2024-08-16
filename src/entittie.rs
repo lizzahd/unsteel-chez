@@ -5,7 +5,7 @@ use crate::event::*;
 use crate::map_edit::*;
 
 pub trait Entity {
-    fn update(&mut self, level: &Level);
+    fn update(&mut self, level: &Level) -> Option<EventType>;
     fn give_event(&mut self, event: &EventType);
 
     fn get_hitbox(&self) -> Rect;

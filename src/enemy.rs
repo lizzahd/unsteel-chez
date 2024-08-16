@@ -25,7 +25,7 @@ impl Enemy {
 }
 
 impl Entity for Enemy {
-	fn update(&mut self, level: &Level) {
+	fn update(&mut self, level: &Level) -> Option<EventType> {
 		if self.movement_system.grounded {
         	self.movement_system.vel.y = 0.;
         } else {
@@ -34,6 +34,8 @@ impl Entity for Enemy {
 
 		// behavior must go before this point
         self.movement_system.update(level);
+
+        None
 	}
 
 	fn draw(&self, level: &Level) {
@@ -61,7 +63,15 @@ impl Entity for Enemy {
 	}
 
 	fn give_event(&mut self, event: &EventType) {
-
+		match event {
+			EventType::Damage{pos} => {
+				if self.get_hitbox().contains(*pos) {
+					self.dead = true;
+					return;
+				}
+			},
+			_ => {}
+		}
 	}
 
 	fn get_dead(&self) -> bool {

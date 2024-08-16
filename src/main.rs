@@ -25,6 +25,7 @@ fn conf() -> Conf {
         window_width: 1152,
         window_height: 648,
         fullscreen: false,
+        window_resizable: false,
         ..Default::default()
     }
 }

@@ -76,6 +76,9 @@ impl MovementSystem {
 
         self.pos += self.vel;
         self.vel.x /= self.move_acc_dampener;
+
+        self.hitbox.x = self.pos.x;
+        self.hitbox.y = self.pos.y;
 	}
 
 	pub fn get_center(&self) -> Vec2 {

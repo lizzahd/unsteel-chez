@@ -33,8 +33,10 @@ impl Entity for Dawn {
 		draw_texture(&self.current_image, self.pos.x + level.x, self.pos.y + ((self.anim_t / 30.).sin() * 16.), WHITE);
 	}
 
-	fn update(&mut self, _level: &Level) {
+	fn update(&mut self, _level: &Level) -> Option<EventType> {
 		self.anim_t += 1.;
+
+		None
 	}
 
 	fn get_hitbox(&self) -> Rect {
@@ -58,7 +60,6 @@ impl Entity for Dawn {
 	}
 
 	fn give_event(&mut self, event: &EventType) {
-		// println!("{:?}", event);
 		match event {
 			EventType::Pickup{pos} => {
 				if self.hitbox.contains(*pos) {
