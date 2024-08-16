@@ -38,8 +38,9 @@ pub async fn level_edit() {
 
     let mut current_place_mode = PlaceMode::Platform;
 
+    let mut player_start = vec2(0., 0.);
     let mut map_data: Vec<(PlaceMode, Rect)> = vec![
-        (PlaceMode::SpawnPlayer, Rect::new(0., 0., 0., 0.)),
+        (PlaceMode::SpawnPlayer, Rect::new(player_start.x, player_start.y, 0., 0.)),
     ];
 
     let mut trigger_i = 0;
@@ -74,7 +75,15 @@ pub async fn level_edit() {
                 match current_place_mode {
                     PlaceMode::Platform => {
                         if let Some(pos) = last_pos {
-                            let r = Rect::new(pos.x - level.x, pos.y, scaled_m_pos.x - (pos.x - level.x), 32.);
+                            let mut x = pos.x - level.x;
+                            let mut w = scaled_m_pos.x - (pos.x - level.x);
+                            
+                            if w < 0. {
+                                w = w.abs();
+                                x -= w;
+                            }
+
+                            let r = Rect::new(x, pos.y, w, 32.);
                             level.collision.platforms.push(r.clone());
                             last_pos = None;
                         } else {
@@ -83,7 +92,21 @@ pub async fn level_edit() {
                     },
                     PlaceMode::Hitbox => {
                         if let Some(pos) = last_pos {
-                            let r = Rect::new(pos.x - level.x, pos.y, scaled_m_pos.x - (pos.x - level.x), scaled_m_pos.y - pos.y);
+                            let mut x = pos.x - level.x;
+                            let mut y = pos.y;
+                            let mut w = scaled_m_pos.x - (pos.x - level.x);
+                            let mut h = scaled_m_pos.y - pos.y;
+                            
+                            if w < 0. {
+                                w = w.abs();
+                                x -= w;
+                            }
+                            if h < 0. {
+                                h = h.abs();
+                                y -= h;
+                            }
+
+                            let r = Rect::new(x, y, w, h);
                             level.collision.rect_hitboxes.push(r.clone());
                             last_pos = None;
                         } else {
@@ -151,6 +174,8 @@ pub async fn level_edit() {
                         } else {
                             entities.push(Box::new(Player::new(scaled_m_pos, &assets)));
                         }
+                        player_start.x = scaled_m_pos.x;
+                        player_start.y = scaled_m_pos.y;
                         map_data[0] = (PlaceMode::SpawnPlayer, Rect::new(scaled_m_pos.x, scaled_m_pos.y, 0., 0.));
                     },
                     PlaceMode::SpawnGoblin => {
@@ -161,7 +186,21 @@ pub async fn level_edit() {
                     },
                     PlaceMode::Trigger => {
                         if let Some(pos) = last_pos {
-                            let r = Rect::new(pos.x - level.x, pos.y, scaled_m_pos.x - (pos.x - level.x), scaled_m_pos.y - pos.y);
+                            let mut x = pos.x - level.x;
+                            let mut y = pos.y;
+                            let mut w = scaled_m_pos.x - (pos.x - level.x);
+                            let mut h = scaled_m_pos.y - pos.y;
+                            
+                            if w < 0. {
+                                w = w.abs();
+                                x -= w;
+                            }
+                            if h < 0. {
+                                h = h.abs();
+                                y -= h;
+                            }
+
+                            let r = Rect::new(x, y, w, h);
                             last_pos = None;
                             map_data.push((PlaceMode::TriggerN(trigger_i), r));
                             trigger_i += 1;
@@ -211,6 +250,9 @@ pub async fn level_edit() {
 
                 fs::write(format!("maps/{}/data", level.name), data).expect("Unable to write to file");
             } else if is_key_pressed(KeyCode::O) { // load map
+                map_data = vec![
+                    (PlaceMode::SpawnPlayer, Rect::new(player_start.x, player_start.y, 0., 0.)),
+                ];
                 entities = Vec::new();
                 level.collision = Collision::new();
 

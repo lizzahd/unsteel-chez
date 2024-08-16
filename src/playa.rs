@@ -113,6 +113,7 @@ impl Entity for Fart {
 pub struct Player {
 	movement_system: MovementSystem,
 	current_image: Texture2D,
+	label_image: Texture2D,
 	dead: bool,
 	flipped: bool,
 }
@@ -120,8 +121,9 @@ pub struct Player {
 impl Player {
 	pub fn new(pos: Vec2, assets: &AssetManager) -> Self {
 		Self {
-			movement_system: MovementSystem::new(pos, 1., 0.5, -15., Rect::new(0., 0., 100., 100.)),
-			current_image: assets.images.get("assu-chan-alpha").unwrap().clone(),
+			movement_system: MovementSystem::new(pos, 1., 0.5, -15., Rect::new(0., 0., 32., 64.)),
+			current_image: assets.images.get("assu_chan").unwrap().clone(),
+			label_image: assets.images.get("ching_chong").unwrap().clone(),
 			dead: false,
 			flipped: false,
 		}
@@ -135,6 +137,7 @@ impl Player {
 impl Entity for Player {
 	fn draw(&self, level: &Level) {
 		draw_texture(&self.current_image, self.movement_system.pos.x + level.x, self.movement_system.pos.y, WHITE);
+		draw_texture(&self.label_image, self.movement_system.pos.x + level.x - 32., self.movement_system.pos.y - 32., WHITE);
 	}
 
 	fn update(&mut self, level: &Level) -> Option<EventType> {
