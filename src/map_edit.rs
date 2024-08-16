@@ -1,6 +1,7 @@
 use std::fs;
 use std::fs::File;
 use std::io::{prelude::*, BufReader};
+use macroquad::audio::{play_sound, stop_sound, PlaySoundParams};
 use macroquad::prelude::*;
 
 use crate::entittie::*;
@@ -24,7 +25,7 @@ pub enum PlaceMode {
 }
 
 pub async fn level_edit() {
-    let assets = AssetManager::new("assets/images").await;
+    let assets = AssetManager::new("assets").await;
 
     let mut entities: Vec<Box<dyn Entity>> = Vec::new();
 
@@ -312,6 +313,9 @@ pub async fn level_edit() {
                     test_entities.push(entity.box_clone());
                 }
 
+                let current_music = assets.sounds.get("dragonball_durag").expect("Could not play sound");
+                play_sound(&current_music, PlaySoundParams{looped: true, volume: 0.5});
+
                 'test_loop: loop {
                     clear_background(BLACK);
 
@@ -381,6 +385,7 @@ pub async fn level_edit() {
                     }
 
                     if is_key_pressed(KeyCode::Escape) {
+                        stop_sound(current_music);
                         break 'test_loop;
                     }
 
