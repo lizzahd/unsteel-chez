@@ -1,7 +1,7 @@
-SpawnPlayer 368 394 0 0
-Hitbox -75 345 78 296
-Hitbox 658 414 15 202
-Hitbox 474 465 66 23
-Platform -93 619 1081 32
-Platform 657 412 30 32
-Platform 465 461 108 32
+SpawnPlayer 0 0 0 0
+Hitbox -1 617 523 31
+Hitbox 552 328 114 106
+Hitbox 536 616 1857 29
+Platform -1 616 523 32
+Platform 552 327 114 32
+Platform 536 615 1857 32

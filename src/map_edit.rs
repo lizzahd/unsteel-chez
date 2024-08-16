@@ -30,11 +30,6 @@ pub async fn level_edit() {
 
     let mut level = Level::new("level_0").await;
 
-    let mut m_last_pos = mouse_position();
-
-    let mut last_pos: Option<Vec2> = None;
-    let mut m_cool = true;
-
     let mut current_place_mode = PlaceMode::Platform;
 
     let mut player_start = vec2(0., 0.);
@@ -43,6 +38,13 @@ pub async fn level_edit() {
     ];
 
     entities.push(Box::new(Player::new(vec2(0., 0.), &assets)));
+
+    let mut m_last_pos = mouse_position();
+    let mut last_pos: Option<Vec2> = None;
+    let mut m_cool = true;
+
+    let mut level_scroll_boost = 1.;
+    const LEVEL_SCROLL_SPEED: f32 = 20.;
 
     loop {
         clear_background(BLACK);
@@ -65,6 +67,8 @@ pub async fn level_edit() {
             current_place_mode = PlaceMode::Dawn;
         } else if is_key_pressed(KeyCode::Key7) {
             current_place_mode = PlaceMode::Trigger;
+        } else if is_key_pressed(KeyCode::Space) {
+            level.x = (screen_width() / 2.) - entities[0].get_pos().x;
         }
 
         if m_cool {
@@ -89,9 +93,9 @@ pub async fn level_edit() {
                     },
                     PlaceMode::Hitbox => {
                         if let Some(pos) = last_pos {
-                            let mut x = pos.x - level.x;
+                            let mut x = pos.x;
                             let mut y = pos.y;
-                            let mut w = scaled_m_pos.x - (pos.x - level.x);
+                            let mut w = scaled_m_pos.x - pos.x;
                             let mut h = scaled_m_pos.y - pos.y;
                             
                             if w < 0. {
@@ -105,9 +109,10 @@ pub async fn level_edit() {
 
                             let r = Rect::new(x, y, w, h);
                             level.collision.rect_hitboxes.push(r.clone());
+                            level.collision.platforms.push(Rect::new(x, y - 1., w, 32.));
                             last_pos = None;
                         } else {
-                            last_pos = Some(Vec2::from_array(mouse_position().into()));
+                            last_pos = Some(Vec2::from_array(scaled_m_pos.into()));
                         }
                     },
                     PlaceMode::Remove => {
@@ -311,6 +316,7 @@ pub async fn level_edit() {
                     clear_background(BLACK);
 
                     test_level.draw();
+                    test_level.x = (screen_width() / 2.) - test_entities[0].get_pos().x;
 
                     if is_mouse_button_down(MouseButton::Middle) {
                         test_level.x += mouse_position().0 - m_last_pos.0;
@@ -383,6 +389,16 @@ pub async fn level_edit() {
                     next_frame().await;
                 }
             }
+        } else if is_key_down(KeyCode::A) {
+            level.x += LEVEL_SCROLL_SPEED * level_scroll_boost;
+        } else if is_key_down(KeyCode::D) {
+            level.x -= LEVEL_SCROLL_SPEED * level_scroll_boost;
+        }
+
+        if is_key_down(KeyCode::LeftShift) {
+            level_scroll_boost = 2.;
+        } else {
+            level_scroll_boost = 1.;
         }
 
         for entity in &mut entities {

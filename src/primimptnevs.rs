@@ -41,7 +41,7 @@ impl MovementSystem {
 		self.grounded = false;
         for platform in &level.collision.platforms {
         	if self.vel.y > 0. && self.pos.y + self.hitbox.h <= platform.y {
-        		if Rect::new(self.pos.x, self.pos.y + self.vel.y, self.hitbox.w, self.hitbox.h).overlaps(platform) {
+        		if Rect::new(self.pos.x + 1., self.pos.y + self.vel.y, self.hitbox.w - 2., self.hitbox.h).overlaps(platform) {
         			self.vel.y = 0.;
         			self.grounded = true;
         			break;
