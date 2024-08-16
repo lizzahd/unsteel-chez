@@ -5,11 +5,9 @@ use std::io::{self, prelude::*, BufReader};
 use crate::entittie::*;
 use crate::playa::*;
 use crate::assets::*;
-use crate::primimptnevs::*;
 use crate::enemy::*;
 use crate::level::*;
 use crate::map_edit::*;
-use crate::touchytouchy::*;
 
 mod entittie;
 mod playa;
@@ -19,6 +17,7 @@ mod enemy;
 mod level;
 mod map_edit;
 mod touchytouchy;
+mod event;
 
 fn conf() -> Conf {
     Conf {
@@ -41,9 +40,6 @@ async fn arse() -> io::Result<()> {
     let mut entities: Vec<Box<dyn Entity>> = Vec::new();
 
     let mut level = Level::new("level_0").await;
-
-    let file = File::open("maps/level_0/data")?;
-    let reader = BufReader::new(file);
 
     let file = File::open(format!("maps/{}/data", level.name)).expect("Could not load file");
     let reader = BufReader::new(file);
@@ -97,8 +93,12 @@ async fn arse() -> io::Result<()> {
             level.x += mouse_position().0 - m_last_pos.0;
         }
 
-        for entity in &mut entities {
+        for entity in entities.iter_mut() {
             entity.update(&level);
+        }
+
+        for entity in entities.iter() {
+            entity.give_data(&level, &entities);
             entity.draw(&level);
         }
 

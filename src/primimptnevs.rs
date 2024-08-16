@@ -2,6 +2,7 @@ use macroquad::prelude::*;
 
 use crate::level::*;
 use crate::entittie::*;
+use crate::event::*;
 use crate::map_edit::*;
 
 pub const GRAVITY: f32 = 0.4;
@@ -77,15 +78,7 @@ impl MovementSystem {
         self.vel.x /= self.move_acc_dampener;
 	}
 
-	fn get_hitbox(&self) -> Rect {
-		self.hitbox
-	}
-
-	fn get_pos(&self) -> Vec2 {
-		self.pos
-	}
-
-	fn get_type(&self) -> Option<PlaceMode> {
-		None
+	pub fn get_center(&self) -> Vec2 {
+		self.pos + vec2(self.hitbox.w / 2., self.hitbox.h / 2.)
 	}
 }

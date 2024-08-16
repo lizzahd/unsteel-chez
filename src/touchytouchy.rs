@@ -5,6 +5,7 @@ use crate::entittie::*;
 use crate::level::*;
 use crate::map_edit::*;
 use crate::assets::*;
+use crate::event::*;
 
 #[derive(Clone)]
 pub struct Dawn {
@@ -12,6 +13,7 @@ pub struct Dawn {
 	pos: Vec2,
 	current_image: Texture2D,
 	hitbox: Rect,
+	dead: bool,
 }
 
 impl Dawn {
@@ -21,6 +23,7 @@ impl Dawn {
 			pos,
 			current_image: assets.images.get("dawn").unwrap().clone(),
 			hitbox: Rect::new(pos.x, pos.y, 50., 109.),
+			dead: false,
 		}
 	}
 }
@@ -48,5 +51,26 @@ impl Entity for Dawn {
 
 	fn box_clone(&self) -> Box<dyn Entity> {
 		Box::new(self.clone())
+	}
+
+	fn give_data(&self, _level: &Level, _entities: &Vec<Box<dyn Entity>>) -> Option<EventType> {
+		None
+	}
+
+	fn give_event(&mut self, event: &EventType) {
+		// println!("{:?}", event);
+		match event {
+			EventType::Pickup{pos} => {
+				if self.hitbox.contains(*pos) {
+					self.dead = true;
+					return;
+				}
+			},
+			_ => {}
+		}
+	}
+
+	fn get_dead(&self) -> bool {
+		self.dead
 	}
 }

@@ -9,6 +9,7 @@ use crate::assets::*;
 use crate::enemy::*;
 use crate::level::*;
 use crate::touchytouchy::*;
+use crate::event::*;
 
 #[derive(Debug)]
 pub enum PlaceMode {
@@ -20,17 +21,6 @@ pub enum PlaceMode {
     Dawn,
     Trigger,
     TriggerN(u8),
-}
-
-fn is_trigger_n(value: u8) -> bool {
-    matches!(value, 0..=255)
-}
-
-fn is_trigger_n_variant(place_mode: &PlaceMode, value: u8) -> bool {
-    match place_mode {
-        PlaceMode::TriggerN(v) => *v == value,
-        _ => false,
-    }
 }
 
 pub async fn level_edit() {
@@ -271,6 +261,8 @@ pub async fn level_edit() {
             } else if is_key_pressed(KeyCode::B) { // test map
                 let mut test_level = level.clone();
                 let mut test_entities: Vec<Box<dyn Entity>> = Vec::new();
+
+                let mut test_events: Vec<EventType> = Vec::new();
                 
                 for entity in &entities {
                     test_entities.push(entity.box_clone());
@@ -285,9 +277,33 @@ pub async fn level_edit() {
                         test_level.x += mouse_position().0 - m_last_pos.0;
                     }
 
-                    for entity in &mut test_entities {
+                    for entity in test_entities.iter_mut() {
                         entity.update(&test_level);
+                        for event in &test_events {
+                            entity.give_event(event);
+                        }
+                    }
+
+                    test_events = Vec::new();
+                    let mut to_kill: Vec<usize> = Vec::new();
+
+                    for (i, entity) in test_entities.iter().enumerate() {
+                        if entity.get_dead() {
+                            to_kill.push(i);
+                            continue;
+                        }
+
+                        let result = entity.give_data(&test_level, &test_entities);
+                        if let Some(t) = result {
+                            test_events.push(t)
+                        }
                         entity.draw(&test_level);
+                    }
+
+                    for i in to_kill {
+                        if i < test_entities.len() {
+                            test_entities.remove(i);
+                        }
                     }
 
                     for hitbox in &mut test_level.collision.rect_hitboxes {
