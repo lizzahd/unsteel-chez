@@ -189,7 +189,8 @@ impl Entity for Player {
         	};
 
         	// fard.
-        	r_event = Some(EventType::SpawnFart{pos: self.get_center(), d})
+        	// it gets subtracted by a vec2 because that makes it perfectly centered on the player
+        	r_event = Some(EventType::SpawnFart{pos: self.get_center() - vec2(50., 50.), d})
         }
 
         // handle physics and stuff
