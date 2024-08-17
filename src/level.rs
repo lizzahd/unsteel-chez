@@ -19,6 +19,7 @@ impl Collision {
 
 pub struct Level<'a> {
 	pub collision: Collision,
+	pub triggers: Vec<Rect>,
 	pub foreground: Texture2D,
 	pub background: Texture2D,
 	// for camera effects
@@ -34,6 +35,7 @@ impl<'a> Level<'a> {
 		Self {
 			// just empty vectors of Rects
 			collision: Collision::new(),
+			triggers: Vec::new(),
 			foreground: map_assets.images.get("foreground").unwrap().clone(),
 			background: map_assets.images.get("background").unwrap().clone(),
 			x: 0.,
@@ -49,6 +51,7 @@ impl<'a> Level<'a> {
 	pub fn clone(&self) -> Self {
 		Self {
 			collision: self.collision.clone(),
+			triggers: self.triggers.clone(),
 			name: self.name,
 			foreground: self.foreground.clone(),
 			background: self.background.clone(),

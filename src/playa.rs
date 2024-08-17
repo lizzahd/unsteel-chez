@@ -1,5 +1,8 @@
 // burt ass
+use ::rand::Rng;
+
 use macroquad::prelude::*;
+use macroquad::audio::{play_sound, PlaySoundParams};
 
 use crate::entittie::*;
 use crate::assets::*;
@@ -21,12 +24,16 @@ pub struct Fart {
 }
 
 impl Fart {
-	const SPEED: f32 = 5.;
-	pub fn new(pos: Vec2, d: f32, assets: &AssetManager) -> Self {
+	const SPEED: f32 = 8.;
+	pub fn new(pos: Vec2, d: f32, ivel: f32, assets: &AssetManager) -> Self {
+		let mut rng = ::rand::thread_rng();
+		let n = rng.gen_range(0..=11);
+		play_sound(&assets.sounds.get(&format!("fart{}", n)).expect("Could not load fart sound"), PlaySoundParams::default());
+
 		Self {
 			pos,
 			// moves only horizontally
-			vel: vec2(d * Self::SPEED, 0.),
+			vel: vec2(d * (Self::SPEED + ivel.abs()), 0.),
 			hitbox: Rect::new(pos.x, pos.y, 50., 50.),
 			lifetime: 50,
 			current_image: assets.images.get("fart").unwrap().clone(),
@@ -127,7 +134,7 @@ pub struct Player {
 impl Player {
 	pub fn new(pos: Vec2, assets: &AssetManager) -> Self {
 		Self {
-			movement_system: MovementSystem::new(pos, 1., 0.5, -15., Rect::new(0., 0., 32., 64.)),
+			movement_system: MovementSystem::new(pos, 1., 0.5, -10., Rect::new(0., 0., 32., 64.)),
 			current_image: assets.images.get("assu_chan").unwrap().clone(),
 			label_image: assets.images.get("ching_chong").unwrap().clone(),
 			dead: false,
@@ -190,7 +197,7 @@ impl Entity for Player {
 
         	// fard.
         	// it gets subtracted by a vec2 because that makes it perfectly centered on the player
-        	r_event = Some(EventType::SpawnFart{pos: self.get_center() - vec2(50., 50.), d})
+        	r_event = Some(EventType::SpawnFart{pos: self.get_center() - vec2(50., 50.), d, ivel: self.movement_system.vel.x})
         }
 
         // handle physics and stuff

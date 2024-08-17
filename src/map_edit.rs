@@ -29,7 +29,7 @@ pub async fn level_edit() {
 
     let mut entities: Vec<Box<dyn Entity>> = Vec::new();
 
-    let mut level = Level::new("level_0").await;
+    let mut level = Level::new("level_1").await;
 
     let mut current_place_mode = PlaceMode::Platform;
 
@@ -166,21 +166,14 @@ pub async fn level_edit() {
                         }
 
                         to_remove = Vec::new();
-                        for i in 1..map_data.len() {
-                            let d = &map_data[i];
-
-                            if Rect::new(d.1.x, d.1.y, d.1.w, d.1.h).contains(scaled_m_pos) {
-                                match d.0 {
-                                    PlaceMode::Trigger => {
-                                        to_remove.push(i);
-                                    },
-                                    _ => {}
-                                }
+                        for (i, trigger) in level.triggers.iter().enumerate() {
+                            if trigger.contains(scaled_m_pos) {
+                                to_remove.push(i);
                             }
                         }
 
                         for i in to_remove {
-                            map_data.remove(i);
+                            level.triggers.remove(i);
                         }
                     },
                     PlaceMode::SpawnPlayer => {
@@ -221,7 +214,8 @@ pub async fn level_edit() {
 
                             let r = Rect::new(x, y, w, h);
                             last_pos = None;
-                            map_data.push((PlaceMode::Trigger, r));
+                            level.triggers.push(r);
+                            // map_data.push((PlaceMode::Trigger, r));
                         } else {
                             last_pos = Some(Vec2::from_array(mouse_position().into()));
                         }
@@ -265,11 +259,17 @@ pub async fn level_edit() {
                     map_data.push((PlaceMode::Platform, Rect::new(platform.x, platform.y, platform.w, platform.h)))
                 }
 
+                for trigger in level.triggers.iter_mut() {
+                    map_data.push((PlaceMode::Trigger, trigger.clone()))
+                }
+
                 for d in &map_data {
                     data.push_str(&format!("{:?} {} {} {} {}\n", d.0, d.1.x, d.1.y, d.1.w, d.1.h));
                 }
 
-                fs::write(format!("maps/{}/data", level.name), data).expect("Unable to write to file");
+                let f_name = format!("maps/{}/data", level.name);
+                File::create(&f_name).unwrap();
+                fs::write(f_name, data).expect("Unable to write to file");
             } else if is_key_pressed(KeyCode::O) { // load map
                 // reinitialize map_data with the player in the first index
                 map_data = vec![
@@ -277,6 +277,7 @@ pub async fn level_edit() {
                 ];
                 entities = Vec::new();
                 level.collision = Collision::new();
+                level.triggers = Vec::new();
 
                 // load the data file
                 let file = File::open(format!("maps/{}/data", level.name)).expect("Could not load file");
@@ -322,6 +323,13 @@ pub async fn level_edit() {
                             let y: f32 = sy.parse().expect("Error: Not a float");
                             entities.push(Box::new(Dawn::new(vec2(x, y), &assets)));
                         },
+                        "Trigger" => {
+                            let x: f32 = sx.parse().expect("Error: Not a float");
+                            let y: f32 = sy.parse().expect("Error: Not a float");
+                            let w: f32 = sw.parse().expect("Error: Not a float");
+                            let h: f32 = sh.parse().expect("Error: Not a float");
+                            level.triggers.push(Rect::new(x, y, w, h)); // TODO: add different trigger types
+                        }
                         _ => {
 
                         }
@@ -339,7 +347,7 @@ pub async fn level_edit() {
                 }
 
                 let current_music = assets.sounds.get("dragonball_durag").expect("Could not play sound");
-                play_sound(&current_music, PlaySoundParams{looped: true, volume: 0.5});
+                // play_sound(&current_music, PlaySoundParams{looped: true, volume: 0.5});
 
                 'test_loop: loop {
                     clear_background(BLACK);
@@ -364,9 +372,9 @@ pub async fn level_edit() {
                         for (i, event) in (&test_events).iter().enumerate() {
                             // Handle spawn events
                             match event {
-                                EventType::SpawnFart{pos, d} => {
+                                EventType::SpawnFart{pos, d, ivel} => {
                                     if !covered_events.contains(&i) {
-                                        to_spawn.push(Box::new(Fart::new(*pos, *d, &assets)));
+                                        to_spawn.push(Box::new(Fart::new(*pos, *d, *ivel, &assets)));
                                         covered_events.push(i);
                                     }
                                 },
@@ -418,6 +426,10 @@ pub async fn level_edit() {
                         draw_line(platform.x + test_level.x, platform.y, platform.x + platform.w + test_level.x, platform.y, 2., Color::from_rgba(255, 0, 0, 255));
                     }
 
+                    for trigger in &test_level.triggers {
+                        draw_rectangle_lines(trigger.x + test_level.x, trigger.y, trigger.w, trigger.h, 2., Color::from_rgba(255, 0, 255, 255));
+                    }
+
                     if is_key_pressed(KeyCode::Escape) {
                         stop_sound(current_music);
                         break 'test_loop;
@@ -453,6 +465,10 @@ pub async fn level_edit() {
 
         for platform in &mut level.collision.platforms {
             draw_line(platform.x + level.x, platform.y, platform.x + platform.w + level.x, platform.y, 2., Color::from_rgba(255, 0, 0, 255));
+        }
+
+        for trigger in &level.triggers {
+            draw_rectangle_lines(trigger.x + level.x, trigger.y, trigger.w, trigger.h, 2., Color::from_rgba(255, 0, 255, 255));
         }
 
         for d in &map_data {
