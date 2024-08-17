@@ -17,9 +17,20 @@ impl Collision {
 	}
 }
 
+#[derive(Debug, Clone)]
+pub enum TriggerType {
+    Kill,
+}
+
+#[derive(Debug, Clone)]
+pub struct Trigger {
+    pub rect: Rect,
+    pub t: TriggerType,
+}
+
 pub struct Level<'a> {
 	pub collision: Collision,
-	pub triggers: Vec<Rect>,
+	pub triggers: Vec<Trigger>,
 	pub foreground: Texture2D,
 	pub background: Texture2D,
 	// for camera effects

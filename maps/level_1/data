@@ -1,4 +1,4 @@
-SpawnPlayer 299 429 0 0
+SpawnPlayer 226 459 0 0
 Hitbox -128 4 128 643
 Hitbox -3 596 2121 51
 Hitbox 1819 553 279 41
@@ -24,7 +24,6 @@ Platform 1940 11 182 32
 Platform 2089 183 137 32
 Platform 2167 186 329 32
 Platform 2484 580 619 32
-Trigger 1816 183 115 57
-Trigger 1927 2 242 374
-Trigger 2115 383 54 45
-Trigger 2087 177 411 465
+KillTrigger 1931 4 231 401
+KillTrigger 1821 184 133 69
+KillTrigger 2078 168 473 475

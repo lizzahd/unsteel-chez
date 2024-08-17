@@ -157,6 +157,16 @@ impl Entity for Player {
 		// EventType to be returned, if at all
 		let mut r_event: Option<EventType> = None;
 
+		for trigger in &level.triggers {
+			if self.get_hitbox().overlaps(&trigger.rect) {
+				match trigger.t {
+					TriggerType::Kill => {
+						self.dead = true;
+					}
+				}
+			}
+		}
+
 		// JUMPIES
         if self.movement_system.grounded {
         	self.movement_system.vel.y = 0.;

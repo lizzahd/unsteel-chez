@@ -21,6 +21,7 @@ pub enum PlaceMode {
     SpawnGoblin,
     Dawn,
     Trigger,
+    KillTrigger,
     Projectile,
 }
 
@@ -39,6 +40,8 @@ pub async fn level_edit() {
     let mut map_data: Vec<(PlaceMode, Rect)> = vec![
         (PlaceMode::SpawnPlayer, Rect::new(player_start.x, player_start.y, 0., 0.)),
     ];
+
+    let death_sound = assets.sounds.get("death").expect("could not load death sound");
 
     // spawn the player. must always be the first index of the vec
     entities.push(Box::new(Player::new(vec2(0., 0.), &assets)));
@@ -74,7 +77,7 @@ pub async fn level_edit() {
         } else if is_key_pressed(KeyCode::Key6) {
             current_place_mode = PlaceMode::Dawn;
         } else if is_key_pressed(KeyCode::Key7) {
-            current_place_mode = PlaceMode::Trigger;
+            current_place_mode = PlaceMode::KillTrigger;
         } else if is_key_pressed(KeyCode::Space) {
             // center on the player
             level.x = (screen_width() / 2.) - entities[0].get_pos().x;
@@ -167,7 +170,7 @@ pub async fn level_edit() {
 
                         to_remove = Vec::new();
                         for (i, trigger) in level.triggers.iter().enumerate() {
-                            if trigger.contains(scaled_m_pos) {
+                            if trigger.rect.contains(scaled_m_pos) {
                                 to_remove.push(i);
                             }
                         }
@@ -195,7 +198,7 @@ pub async fn level_edit() {
                     PlaceMode::Dawn => {
                         entities.push(Box::new(Dawn::new(scaled_m_pos, &assets)));
                     },
-                    PlaceMode::Trigger => {
+                    PlaceMode::KillTrigger => {
                         // exactly the same as a hitbox, but with no collision
                         if let Some(pos) = last_pos {
                             let mut x = pos.x - level.x;
@@ -214,7 +217,7 @@ pub async fn level_edit() {
 
                             let r = Rect::new(x, y, w, h);
                             last_pos = None;
-                            level.triggers.push(r);
+                            level.triggers.push(Trigger {rect: r, t: TriggerType::Kill});
                             // map_data.push((PlaceMode::Trigger, r));
                         } else {
                             last_pos = Some(Vec2::from_array(mouse_position().into()));
@@ -260,7 +263,7 @@ pub async fn level_edit() {
                 }
 
                 for trigger in level.triggers.iter_mut() {
-                    map_data.push((PlaceMode::Trigger, trigger.clone()))
+                    map_data.push((PlaceMode::KillTrigger, trigger.rect.clone()))
                 }
 
                 for d in &map_data {
@@ -323,12 +326,12 @@ pub async fn level_edit() {
                             let y: f32 = sy.parse().expect("Error: Not a float");
                             entities.push(Box::new(Dawn::new(vec2(x, y), &assets)));
                         },
-                        "Trigger" => {
+                        "KillTrigger" => {
                             let x: f32 = sx.parse().expect("Error: Not a float");
                             let y: f32 = sy.parse().expect("Error: Not a float");
                             let w: f32 = sw.parse().expect("Error: Not a float");
                             let h: f32 = sh.parse().expect("Error: Not a float");
-                            level.triggers.push(Rect::new(x, y, w, h)); // TODO: add different trigger types
+                            level.triggers.push(Trigger{rect: Rect::new(x, y, w, h), t: TriggerType::Kill}); // TODO: add different trigger types
                         }
                         _ => {
 
@@ -347,7 +350,7 @@ pub async fn level_edit() {
                 }
 
                 let current_music = assets.sounds.get("dragonball_durag").expect("Could not play sound");
-                // play_sound(&current_music, PlaySoundParams{looped: true, volume: 0.5});
+                play_sound(&current_music, PlaySoundParams{looped: true, volume: 0.5});
 
                 'test_loop: loop {
                     clear_background(BLACK);
@@ -413,6 +416,23 @@ pub async fn level_edit() {
 
                     // despawn queued entities
                     for i in to_kill {
+                        if i == 0 {
+                            stop_sound(current_music);
+                            play_sound(death_sound, PlaySoundParams::default());
+
+                            let mut death_t = 0;
+                            loop {
+                                clear_background(BLACK);
+
+                                death_t += 1;
+                                if death_t > 1000 {
+                                    break 'test_loop;
+                                }
+
+                                draw_texture(assets.images.get("death_screen").expect("Could not load death screen"), 0., 0., WHITE);
+                                next_frame().await;
+                            }
+                        }
                         if i < test_entities.len() {
                             test_entities.remove(i);
                         }
@@ -427,7 +447,7 @@ pub async fn level_edit() {
                     }
 
                     for trigger in &test_level.triggers {
-                        draw_rectangle_lines(trigger.x + test_level.x, trigger.y, trigger.w, trigger.h, 2., Color::from_rgba(255, 0, 255, 255));
+                        draw_rectangle_lines(trigger.rect.x + test_level.x, trigger.rect.y, trigger.rect.w, trigger.rect.h, 2., Color::from_rgba(255, 0, 255, 255));
                     }
 
                     if is_key_pressed(KeyCode::Escape) {
@@ -468,7 +488,7 @@ pub async fn level_edit() {
         }
 
         for trigger in &level.triggers {
-            draw_rectangle_lines(trigger.x + level.x, trigger.y, trigger.w, trigger.h, 2., Color::from_rgba(255, 0, 255, 255));
+            draw_rectangle_lines(trigger.rect.x + level.x, trigger.rect.y, trigger.rect.w, trigger.rect.h, 2., Color::from_rgba(255, 0, 255, 255));
         }
 
         for d in &map_data {
