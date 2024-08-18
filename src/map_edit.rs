@@ -19,6 +19,7 @@ pub enum PlaceMode {
     Remove,
     SpawnPlayer,
     SpawnGoblin,
+    SpawnGobloronBoss,
     Dawn,
     Trigger,
     KillTrigger,
@@ -30,7 +31,7 @@ pub async fn level_edit() {
 
     let mut entities: Vec<Box<dyn Entity>> = Vec::new();
 
-    let mut level = Level::new("level_1").await;
+    let mut level = Level::new("level_0").await;
 
     let mut current_place_mode = PlaceMode::Platform;
 
@@ -140,7 +141,9 @@ pub async fn level_edit() {
                         }
 
                         for i in to_remove {
-                            level.collision.rect_hitboxes.remove(i);
+                            if i < level.collision.rect_hitboxes.len() {
+                                level.collision.rect_hitboxes.remove(i);
+                            }
                         }
 
                         to_remove = Vec::new();
@@ -176,7 +179,9 @@ pub async fn level_edit() {
                         }
 
                         for i in to_remove {
-                            level.triggers.remove(i);
+                            if i < level.triggers.len() {
+                                level.triggers.remove(i);
+                            }
                         }
                     },
                     PlaceMode::SpawnPlayer => {
@@ -306,6 +311,9 @@ pub async fn level_edit() {
                             let x: f32 = sx.parse().expect("Error: Not a float");
                             let y: f32 = sy.parse().expect("Error: Not a float");
                             entities.push(Box::new(Enemy::new(vec2(x, y), &assets)));
+                        },
+                        "SpawnGobloronBoss" => {
+                            entities.push(Box::new(GobloronBoss::new(&assets)));
                         },
                         "Platform" => {
                             let x: f32 = sx.parse().expect("Error: Not a float");
