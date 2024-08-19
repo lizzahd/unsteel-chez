@@ -21,6 +21,7 @@ impl Collision {
 #[derive(Debug, Clone)]
 pub enum TriggerType {
     Kill,
+    Cheese,
 }
 
 #[derive(Debug, Clone)]

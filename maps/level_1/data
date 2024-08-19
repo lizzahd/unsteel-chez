@@ -1,5 +1,8 @@
-SpawnPlayer 0 0 0 0
+SpawnPlayer 503 500 0 0
 SpawnGobloronBoss 2224 352 0 0
+Dawn 294 476 0 0
+Dawn 178 472 0 0
+Dawn 62 465 0 0
 Hitbox -128 4 128 643
 Hitbox -3 596 2121 51
 Hitbox 1819 553 279 41

@@ -94,4 +94,8 @@ impl Entity for Dawn {
 	fn get_dead(&self) -> bool {
 		self.dead
 	}
+
+	fn get_hp(&self) -> i32 {
+		1
+	}
 }

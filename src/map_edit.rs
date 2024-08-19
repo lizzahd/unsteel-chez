@@ -26,6 +26,7 @@ pub enum PlaceMode {
     Trigger,
     Laser,
     KillTrigger,
+    CheeseTrigger,
     Projectile,
 }
 
@@ -47,6 +48,8 @@ pub async fn level_edit() {
 
     let death_sound = assets.sounds.get("death").expect("could not load death sound");
     let win_music = assets.sounds.get("win_music").expect("could not load win music");
+    let cheese_music = assets.sounds.get("cheese").expect("could not load cheese music");
+    let win_nohit_music = assets.sounds.get("win_nohit").expect("could not load win_nohit music");
 
     // spawn the player. must always be the first index of the vec
     entities.push(Box::new(Player::new(vec2(0., 0.), &assets)));
@@ -86,6 +89,8 @@ pub async fn level_edit() {
         } else if is_key_pressed(KeyCode::Space) {
             // center on the player
             level.x = (screen_width() / 2.) - entities[0].get_pos().x;
+        } else if is_key_pressed(KeyCode::Key8) {
+            current_place_mode = PlaceMode::CheeseTrigger;
         }
 
         if m_cool {
@@ -232,6 +237,31 @@ pub async fn level_edit() {
                             last_pos = Some(Vec2::from_array(mouse_position().into()));
                         }
                     },
+                    PlaceMode::CheeseTrigger => {
+                        // exactly the same as a hitbox, but with no collision
+                        if let Some(pos) = last_pos {
+                            let mut x = pos.x - level.x;
+                            let mut y = pos.y;
+                            let mut w = scaled_m_pos.x - (pos.x - level.x);
+                            let mut h = scaled_m_pos.y - pos.y;
+                            
+                            if w < 0. {
+                                w = w.abs();
+                                x -= w;
+                            }
+                            if h < 0. {
+                                h = h.abs();
+                                y -= h;
+                            }
+
+                            let r = Rect::new(x, y, w, h);
+                            last_pos = None;
+                            level.triggers.push(Trigger {rect: r, t: TriggerType::Cheese});
+                            // map_data.push((PlaceMode::Trigger, r));
+                        } else {
+                            last_pos = Some(Vec2::from_array(mouse_position().into()));
+                        }
+                    }
                     _ => {}
                 }
                 m_cool = false;
@@ -347,7 +377,14 @@ pub async fn level_edit() {
                             let w: f32 = sw.parse().expect("Error: Not a float");
                             let h: f32 = sh.parse().expect("Error: Not a float");
                             level.triggers.push(Trigger{rect: Rect::new(x, y, w, h), t: TriggerType::Kill}); // TODO: add different trigger types
-                        }
+                        },
+                        "CheeseTrigger" => {
+                            let x: f32 = sx.parse().expect("Error: Not a float");
+                            let y: f32 = sy.parse().expect("Error: Not a float");
+                            let w: f32 = sw.parse().expect("Error: Not a float");
+                            let h: f32 = sh.parse().expect("Error: Not a float");
+                            level.triggers.push(Trigger{rect: Rect::new(x, y, w, h), t: TriggerType::Cheese}); // TODO: add different trigger types
+                        },
                         _ => {
 
                         }
@@ -365,6 +402,8 @@ pub async fn level_edit() {
                 }
 
                 play_sound(&test_level.music, PlaySoundParams{looped: true, volume: 0.5});
+
+                let mut taken_damage = false;
 
                 'test_loop: loop {
                     clear_background(BLACK);
@@ -403,6 +442,39 @@ pub async fn level_edit() {
                                         covered_events.push(i);
                                     }
                                 },
+                                EventType::Win => {
+                                    stop_sound(&test_level.music);
+                                    play_sound(cheese_music, PlaySoundParams::default());
+
+                                    let mut death_t = 0;
+                                    loop {
+                                        clear_background(BLACK);
+
+                                        death_t += 1;
+                                        if death_t > 800 {
+                                            if !taken_damage {
+                                                play_sound(win_nohit_music, PlaySoundParams::default());
+
+                                                let mut death_t = 0;
+                                                loop {
+                                                    clear_background(BLACK);
+
+                                                    death_t += 1;
+                                                    if death_t > 800 {
+                                                        break 'test_loop;
+                                                    }
+
+                                                    draw_texture(assets.images.get("win_nohit_screen").expect("Could not load death screen"), 0., 0., WHITE);
+                                                    next_frame().await;
+                                                }
+                                            }
+                                            break 'test_loop;
+                                        }
+
+                                        draw_texture(assets.images.get("cheese_screen").expect("Could not load death screen"), 0., 0., WHITE);
+                                        next_frame().await;
+                                    }
+                                },
                                 EventType::SpawnGoblin {pos} => {
                                     to_spawn.push(Box::new(Enemy::new(*pos, &assets)));
                                 },
@@ -413,6 +485,10 @@ pub async fn level_edit() {
                             // println!("{:?}", event);
                             entity.give_event(event);
                         }
+                    }
+
+                    if test_entities[0].get_hp() < Player::MAX_HP {
+                        taken_damage = true;
                     }
 
                     // spawn queued entities

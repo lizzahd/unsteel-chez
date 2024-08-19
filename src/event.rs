@@ -9,5 +9,6 @@ pub enum EventType {
 	Laser {start_pos: Vec2, angle: f32, speed: f32, distance: f32, duration: i32},
 	PlayerSpotted {pos: Vec2},
 	SpawnGoblin {pos: Vec2},
-	HPGrab
+	HPGrab,
+	Win,
 }

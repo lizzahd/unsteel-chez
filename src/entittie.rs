@@ -15,6 +15,7 @@ pub trait Entity {
     fn get_pos(&self) -> Vec2;
     fn get_type(&self) -> Option<PlaceMode>;
     fn get_dead(&self) -> bool;
+    fn get_hp(&self) -> i32;
 
     // happens every tick, after update
     fn draw(&self, level: &Level);

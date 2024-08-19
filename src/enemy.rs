@@ -163,6 +163,10 @@ impl Entity for Enemy {
 	fn get_dead(&self) -> bool {
 		self.dead
 	}
+
+	fn get_hp(&self) -> i32 {
+		1
+	}
 }
 
 #[derive(Debug, Clone)]
@@ -328,6 +332,10 @@ impl Entity for GobloronBoss {
 
 	fn get_dead(&self) -> bool {
 		self.dead
+	}
+
+	fn get_hp(&self) -> i32 {
+		self.eye.hp + self.left_nip.hp + self.right_nip.hp
 	}
 }
 
@@ -529,6 +537,10 @@ impl Entity for Laser {
 	fn get_dead(&self) -> bool {
 		self.dead
 	}
+
+	fn get_hp(&self) -> i32 {
+		1
+	}
 }
 
 #[derive(Debug, Clone)]
@@ -547,7 +559,7 @@ struct Nip {
 }
 
 impl Nip {
-	const MAX_FIRE_COOL: i32 = 1000; // 10000 is good
+	const MAX_FIRE_COOL: i32 = 10000; // 10000 is good
 	const MAX_WARMUP_DURATION: i32 = 200;
 	const MAX_FIRE_DURATION: i32 = 100;
 	const NIPPLE_POINT: Vec2 = vec2(3., 14.);

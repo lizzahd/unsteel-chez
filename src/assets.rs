@@ -18,6 +18,7 @@ impl AssetManager {
         };
 
         // gets all files in a directory and loads them according to file extension
+        // let texture_paths = fs::read_dir(path).unwrap();
         let texture_paths = fs::read_dir(path).unwrap();
 
         for path in texture_paths {

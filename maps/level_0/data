@@ -1,4 +1,4 @@
-SpawnPlayer 328 436 0 0
+SpawnPlayer 127 493 0 0
 SpawnGoblin 1311 431 0 0
 Dawn 1067 335 0 0
 SpawnGoblin 1342 116 0 0
@@ -105,4 +105,4 @@ Platform 1422 303 57 32
 Platform 973 221 39 32
 Platform 974 462 279 32
 KillTrigger 16002 635 526 11
-KillTrigger 15594 319 293 296
+CheeseTrigger 15592 321 297 294

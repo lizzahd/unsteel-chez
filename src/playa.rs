@@ -128,6 +128,10 @@ impl Entity for Fart {
 	fn get_dead(&self) -> bool {
 		self.dead
 	}
+
+	fn get_hp(&self) -> i32 {
+		1
+	}
 }
 
 #[derive(Clone)]
@@ -151,11 +155,13 @@ pub struct Player {
 	hp: Sound,
 
 	fart_icon: Texture2D,
-	lovecraft_icon: Texture2D
+	lovecraft_icon: Texture2D,
 }
 
 impl Player {
 	const FART_RESET: i32 = 90;
+	pub const MAX_HP: i32 = 100;
+
 	pub fn new(pos: Vec2, assets: &AssetManager) -> Self {
 		Self {
 			movement_system: MovementSystem::new(pos, 1., 0.5, -13., Rect::new(0., 0., 32., 64.)),
@@ -163,7 +169,7 @@ impl Player {
 			label_image: assets.images.get("ching_chong").unwrap().clone(),
 			dead: false,
 			flipped: false,
-			lovecraft: 100,
+			lovecraft: Self::MAX_HP,
 			dammit_cooldown: 0,
 			lovecraft_cooldown: 0,
 			fart_power: 100,
@@ -171,7 +177,7 @@ impl Player {
 			ow: assets.sounds.get("slap7").expect("nuh uh").clone(),
 			hp: assets.sounds.get("hp").expect("no").clone(),
 			fart_icon: assets.images.get("buttfart").unwrap().clone(),
-			lovecraft_icon: assets.images.get("lovecraft").unwrap().clone()
+			lovecraft_icon: assets.images.get("lovecraft").unwrap().clone(),
 		}
 	}
 
@@ -212,7 +218,11 @@ impl Entity for Player {
 				match trigger.t {
 					TriggerType::Kill => {
 						self.dead = true;
+					},
+					TriggerType::Cheese => {
+						return Some(EventType::Win);
 					}
+					_ => {}
 				}
 			}
 		}
@@ -368,8 +378,8 @@ impl Entity for Player {
 				if self.lovecraft_cooldown == 0 {
 					play_sound(&self.hp, PlaySoundParams{looped: false, volume: 0.3});
 					self.lovecraft += 20;
-					if self.lovecraft > 100 {
-						self.lovecraft = 100;
+					if self.lovecraft > Self::MAX_HP {
+						self.lovecraft = Self::MAX_HP;
 					}
 					self.lovecraft_cooldown = 10;
 				}
@@ -383,5 +393,9 @@ impl Entity for Player {
 	fn get_dead(&self) -> bool {
 		// ded
 		self.dead
+	}
+
+	fn get_hp(&self) -> i32 {
+		self.lovecraft
 	}
 }
