@@ -59,7 +59,22 @@ impl Entity for Dawn {
 		Box::new(self.clone())
 	}
 
-	fn give_data(&self, _level: &Level, _entities: &Vec<Box<dyn Entity>>) -> Option<EventType> {
+	fn give_data(&self, _level: &Level, entities: &Vec<Box<dyn Entity>>) -> Option<EventType> {
+		for e in entities {
+			if let Some(t) = e.get_type() {
+				match t {
+					PlaceMode::SpawnPlayer => {
+						if e.get_hitbox().overlaps(&self.hitbox) {
+							return Some(EventType::HPGrab);
+						}
+					}, 
+					_=> {
+
+					}
+				}
+			}
+		}
+		
 		None
 	}
 

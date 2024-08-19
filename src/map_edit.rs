@@ -34,7 +34,7 @@ pub async fn level_edit() {
 
     let mut entities: Vec<Box<dyn Entity>> = Vec::new();
 
-    let mut level = Level::new("level_1").await;
+    let mut level = Level::new("level_0").await;
 
     let mut current_place_mode = PlaceMode::Platform;
 
@@ -448,7 +448,7 @@ pub async fn level_edit() {
                                 clear_background(BLACK);
 
                                 death_t += 1;
-                                if death_t > 1000 {
+                                if death_t > 100 {
                                     break 'test_loop;
                                 }
 

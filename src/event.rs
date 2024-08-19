@@ -8,4 +8,5 @@ pub enum EventType {
 	KillPlayer,
 	Laser {start_pos: Vec2, angle: f32, speed: f32, distance: f32, duration: i32},
 	PlayerSpotted {pos: Vec2},
+	HPGrab
 }
