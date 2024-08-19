@@ -264,6 +264,8 @@ async fn arse() -> io::Result<()> {
                                                 }
                                             }
 
+                                            play_sound(&level.music, PlaySoundParams{looped: true, volume: 0.5});
+
                                             continue 'main_loop;
                                         }
 
