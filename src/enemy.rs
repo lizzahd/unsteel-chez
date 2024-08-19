@@ -208,7 +208,7 @@ impl Entity for GobloronBoss {
 
 		let mut e_result: Option<EventType> = None;
 
-		// e_result = self.eye.update();
+		e_result = self.eye.update();
 
         self.left_nip.update();
         if self.left_nip.fire_cool > 0 {
@@ -260,8 +260,8 @@ impl Entity for GobloronBoss {
 		} else {
 			&self.eye_image
 		};
-		draw_texture(eye_tex, self.eye.pos.x + level.x, self.eye.pos.y, WHITE);
 		self.eye.draw(level);
+		draw_texture(eye_tex, self.eye.pos.x + level.x, self.eye.pos.y, WHITE);
 
 		let left_nip_tex = if self.left_nip.dead {
 			&self.nip_dead_image
@@ -270,8 +270,8 @@ impl Entity for GobloronBoss {
 		} else {
 			&self.nip_image
 		};
-		draw_texture(left_nip_tex, self.left_nip.pos.x + level.x, self.left_nip.pos.y, WHITE);
 		self.left_nip.draw(level);
+		draw_texture(left_nip_tex, self.left_nip.pos.x + level.x, self.left_nip.pos.y, WHITE);
 
 		let right_nip_tex = if self.right_nip.dead {
 			&self.nip_dead_image
@@ -280,8 +280,8 @@ impl Entity for GobloronBoss {
 		} else {
 			&self.nip_image
 		};
-		draw_texture(right_nip_tex, self.right_nip.pos.x + level.x, self.right_nip.pos.y, WHITE);
 		self.right_nip.draw(level);
+		draw_texture(right_nip_tex, self.right_nip.pos.x + level.x, self.right_nip.pos.y, WHITE);
 	}
 
 	fn get_hitbox(&self) -> Rect {

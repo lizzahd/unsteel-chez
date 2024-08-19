@@ -479,9 +479,9 @@ pub async fn level_edit() {
                                 next_frame().await;
                             }
                         }
-                        // if i < test_entities.len() {
-                        //     test_entities.remove(i);
-                        // }
+                        if i < test_entities.len() {
+                            test_entities.remove(i);
+                        }
                     }
 
                     for hitbox in &mut test_level.collision.rect_hitboxes {
