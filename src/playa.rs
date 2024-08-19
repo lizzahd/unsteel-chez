@@ -2,7 +2,7 @@
 use ::rand::Rng;
 
 use macroquad::prelude::*;
-use macroquad::audio::{play_sound, PlaySoundParams};
+use macroquad::audio::{play_sound, PlaySoundParams, Sound};
 
 use crate::entittie::*;
 use crate::assets::*;
@@ -21,7 +21,7 @@ pub struct Fart {
 	// how long the fart lasts
 	lifetime: i32,
 	current_image: Texture2D,
-	pub dead: bool,
+	pub dead: bool
 }
 
 impl Fart {
@@ -39,7 +39,7 @@ impl Fart {
 			hitbox: rect,
 			lifetime: 50,
 			current_image: assets.images.get("fart").unwrap().clone(),
-			dead: false,
+			dead: false
 		}
 	}
 }
@@ -138,9 +138,24 @@ pub struct Player {
 	label_image: Texture2D,
 	dead: bool,
 	flipped: bool,
+
+	lovecraft: i32,
+	dammit_cooldown: i32,
+
+	lovecraft_cooldown: i32,
+
+	fart_power: i32,
+	fart_cooldown: i32,
+
+	ow: Sound,
+	hp: Sound,
+
+	fart_icon: Texture2D,
+	lovecraft_icon: Texture2D
 }
 
 impl Player {
+	const FART_RESET: i32 = 90;
 	pub fn new(pos: Vec2, assets: &AssetManager) -> Self {
 		Self {
 			movement_system: MovementSystem::new(pos, 1., 0.5, -13., Rect::new(0., 0., 32., 64.)),
@@ -148,6 +163,15 @@ impl Player {
 			label_image: assets.images.get("ching_chong").unwrap().clone(),
 			dead: false,
 			flipped: false,
+			lovecraft: 100,
+			dammit_cooldown: 0,
+			lovecraft_cooldown: 0,
+			fart_power: 100,
+			fart_cooldown: 0,
+			ow: assets.sounds.get("slap7").expect("nuh uh").clone(),
+			hp: assets.sounds.get("hp").expect("no").clone(),
+			fart_icon: assets.images.get("buttfart").unwrap().clone(),
+			lovecraft_icon: assets.images.get("lovecraft").unwrap().clone()
 		}
 	}
 
@@ -158,8 +182,25 @@ impl Player {
 
 impl Entity for Player {
 	fn draw(&self, level: &Level) {
-		draw_texture(&self.current_image, self.movement_system.pos.x + level.x, self.movement_system.pos.y, WHITE);
-		draw_texture(&self.label_image, self.movement_system.pos.x + level.x - 32., self.movement_system.pos.y - 32., WHITE);
+		draw_texture_ex(&self.current_image, self.movement_system.pos.x + level.x, self.movement_system.pos.y, WHITE, 
+			DrawTextureParams {
+				flip_x: self.flipped,
+				..Default::default()
+		});
+
+		draw_texture_ex(&self.label_image, self.movement_system.pos.x + level.x - 32., self.movement_system.pos.y - 32., WHITE, 
+			DrawTextureParams {
+				flip_x: self.flipped,
+				..Default::default()
+		});
+
+		draw_rectangle(10., 10., 20., 100., BROWN);
+		draw_rectangle(10., (100. - self.fart_power as f32 + 10.), 20., self.fart_power as f32, GREEN);
+		draw_texture(&self.fart_icon, 10., 120., WHITE);
+
+		draw_rectangle(40., 10., 20., 100., RED);
+		draw_rectangle(40., (100. - self.lovecraft as f32 + 10.), 20., self.lovecraft as f32, GREEN);
+		draw_texture(&self.lovecraft_icon, 40., 120., WHITE);
 	}
 
 	fn update(&mut self, level: &Level) -> Option<EventType> {
@@ -216,7 +257,29 @@ impl Entity for Player {
 
         	// fard.
         	// it gets subtracted by a vec2 because that makes it perfectly centered on the player
-        	r_event = Some(EventType::SpawnFart{rect: Rect::new(self.get_center().x - 50., self.get_center().y - 50., 50., 50.), d, ivel: self.movement_system.vel.x})
+        	if self.fart_power > 0 {
+        		r_event = Some(EventType::SpawnFart{rect: Rect::new(self.get_center().x - 50., self.get_center().y - 50., 50., 50.), d, ivel: self.movement_system.vel.x});
+        		
+        		self.fart_power -= 10;
+        		self.fart_cooldown = Self::FART_RESET;
+        		if self.fart_power < 0 { self.fart_power = 0; }
+        	}
+        }
+
+        if self.fart_cooldown > 0 {
+        	self.fart_cooldown -= 1;
+        }
+
+        if self.fart_cooldown == 0 && self.fart_power < 100 {
+        	self.fart_power += 1;
+        }
+
+        if self.lovecraft_cooldown > 0 {
+        	self.lovecraft_cooldown -= 1;
+        }
+
+        if self.dammit_cooldown > 0 {
+        	self.dammit_cooldown -= 1;
         }
 
         // handle physics and stuff
@@ -289,8 +352,28 @@ impl Entity for Player {
 		match event {
 			// make the player die
 			EventType::KillPlayer => {
-				self.dead = true;
-				return;
+				if self.dammit_cooldown == 0 {
+					play_sound(&self.ow, PlaySoundParams{looped: false, volume: 1.});
+					self.lovecraft -= 10;
+					self.dammit_cooldown = 20;
+				}
+
+				if self.lovecraft < 1 {
+					self.dead = true;
+					return;
+				}
+			},
+
+			EventType::HPGrab => {
+				if self.lovecraft_cooldown == 0 {
+					play_sound(&self.hp, PlaySoundParams{looped: false, volume: 0.3});
+					self.lovecraft += 20;
+					if self.lovecraft > 100 {
+						self.lovecraft = 100;
+					}
+					self.lovecraft_cooldown = 10;
+				}
+
 			},
 			_ => {
 			}
