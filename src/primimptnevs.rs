@@ -7,6 +7,10 @@ use crate::map_edit::*;
 
 pub const GRAVITY: f32 = 0.4;
 
+pub fn dist(pos_1: &Vec2, pos_2: &Vec2) -> f32 {
+	((pos_2.x - pos_1.x).powf(2.) + (pos_2.y - pos_1.y).powf(2.)).sqrt()
+}
+
 #[derive(Clone)]
 pub struct MovementSystem {
 	pub pos: Vec2,

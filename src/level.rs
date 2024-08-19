@@ -1,4 +1,5 @@
 use macroquad::prelude::*;
+use macroquad::audio::{Sound, PlaySoundParams, play_sound};
 
 use crate::assets::*;
 
@@ -36,6 +37,7 @@ pub struct Level<'a> {
 	// for camera effects
 	pub x: f32,
 	pub name: &'a str,
+	pub music: Sound
 }
 
 impl<'a> Level<'a> {
@@ -51,6 +53,7 @@ impl<'a> Level<'a> {
 			background: map_assets.images.get("background").unwrap().clone(),
 			x: 0.,
 			name,
+			music: map_assets.sounds.get("ambient").unwrap().clone(),
 		}
 	}
 
@@ -67,6 +70,7 @@ impl<'a> Level<'a> {
 			foreground: self.foreground.clone(),
 			background: self.background.clone(),
 			x: 0.,
+			music: self.music.clone(),
 		}
 	}
 }

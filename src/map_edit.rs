@@ -1,6 +1,8 @@
 use std::fs;
 use std::fs::File;
+use std::io::Write;
 use std::io::{prelude::*, BufReader};
+use std::fs::OpenOptions;
 use macroquad::audio::{play_sound, stop_sound, PlaySoundParams};
 use macroquad::prelude::*;
 
@@ -22,6 +24,7 @@ pub enum PlaceMode {
     SpawnGobloronBoss,
     Dawn,
     Trigger,
+    Laser,
     KillTrigger,
     Projectile,
 }
@@ -31,7 +34,7 @@ pub async fn level_edit() {
 
     let mut entities: Vec<Box<dyn Entity>> = Vec::new();
 
-    let mut level = Level::new("level_0").await;
+    let mut level = Level::new("level_1").await;
 
     let mut current_place_mode = PlaceMode::Platform;
 
@@ -43,6 +46,7 @@ pub async fn level_edit() {
     ];
 
     let death_sound = assets.sounds.get("death").expect("could not load death sound");
+    let win_music = assets.sounds.get("win_music").expect("could not load win music");
 
     // spawn the player. must always be the first index of the vec
     entities.push(Box::new(Player::new(vec2(0., 0.), &assets)));
@@ -276,7 +280,10 @@ pub async fn level_edit() {
                 }
 
                 let f_name = format!("maps/{}/data", level.name);
-                File::create(&f_name).unwrap();
+                // File::create(&f_name).unwrap();
+
+                fs::remove_file(&f_name).expect("could not remove file");
+
                 fs::write(f_name, data).expect("Unable to write to file");
             } else if is_key_pressed(KeyCode::O) { // load map
                 // reinitialize map_data with the player in the first index
@@ -357,8 +364,7 @@ pub async fn level_edit() {
                     test_entities.push(entity.box_clone());
                 }
 
-                let current_music = assets.sounds.get("dragonball_durag").expect("Could not play sound");
-                play_sound(&current_music, PlaySoundParams{looped: true, volume: 0.5});
+                play_sound(&test_level.music, PlaySoundParams{looped: true, volume: 0.5});
 
                 'test_loop: loop {
                     clear_background(BLACK);
@@ -383,16 +389,25 @@ pub async fn level_edit() {
                         for (i, event) in (&test_events).iter().enumerate() {
                             // Handle spawn events
                             match event {
-                                EventType::SpawnFart{pos, d, ivel} => {
+                                EventType::SpawnFart{rect, d, ivel} => {
                                     if !covered_events.contains(&i) {
-                                        to_spawn.push(Box::new(Fart::new(*pos, *d, *ivel, &assets)));
+                                        to_spawn.push(Box::new(Fart::new(*rect, *d, *ivel, &assets)));
                                         covered_events.push(i);
                                     }
                                 },
+                                EventType::Laser {start_pos, angle, speed, distance, duration} => {
+                                    if !covered_events.contains(&i) {
+                                        to_spawn.push(Box::new(Laser{
+                                            start_pos: *start_pos, angle: *angle, speed: *speed, distance: *distance, duration: *duration, dead: false,
+                                        }));
+                                        covered_events.push(i);
+                                    }
+                                }
                                 _ => {}
                             }
 
                             // let entities interact with events
+                            // println!("{:?}", event);
                             entity.give_event(event);
                         }
                     }
@@ -425,7 +440,7 @@ pub async fn level_edit() {
                     // despawn queued entities
                     for i in to_kill {
                         if i == 0 {
-                            stop_sound(current_music);
+                            stop_sound(&test_level.music);
                             play_sound(death_sound, PlaySoundParams::default());
 
                             let mut death_t = 0;
@@ -438,6 +453,22 @@ pub async fn level_edit() {
                                 }
 
                                 draw_texture(assets.images.get("death_screen").expect("Could not load death screen"), 0., 0., WHITE);
+                                next_frame().await;
+                            }
+                        }
+
+                        if let Some(PlaceMode::SpawnGobloronBoss) = test_entities[i].get_type() {
+                            stop_sound(&test_level.music);
+                            play_sound(win_music, PlaySoundParams{looped: true, volume: 1.});
+
+                            loop {
+                                clear_background(BLACK);
+
+                                if is_key_pressed(KeyCode::Escape) {
+                                    break 'test_loop;
+                                }
+
+                                draw_texture(assets.images.get("win_screen").expect("Could not load win screen"), 0., 0., WHITE);
                                 next_frame().await;
                             }
                         }
@@ -459,7 +490,7 @@ pub async fn level_edit() {
                     }
 
                     if is_key_pressed(KeyCode::Escape) {
-                        stop_sound(current_music);
+                        stop_sound(&test_level.music);
                         break 'test_loop;
                     }
 

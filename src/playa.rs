@@ -1,5 +1,5 @@
 // burt ass
-// use ::rand::Rng;
+use ::rand::Rng;
 
 use macroquad::prelude::*;
 use macroquad::audio::{play_sound, PlaySoundParams};
@@ -10,6 +10,7 @@ use crate::primimptnevs::*;
 use crate::level::*;
 use crate::map_edit::*;
 use crate::event::*;
+use crate::enemy::*;
 
 // HEHEHEHEHEHEHEHEHE
 #[derive(Clone)]
@@ -25,17 +26,17 @@ pub struct Fart {
 
 impl Fart {
 	const SPEED: f32 = 8.;
-	pub fn new(pos: Vec2, d: f32, ivel: f32, assets: &AssetManager) -> Self {
-		// let mut rng = ::rand::thread_rng();
-		// let n = rng.gen_range(0..=11);
-		// play_sound(&assets.sounds.get(&format!("fart{}", n)).expect("Could not load fart sound"), PlaySoundParams::default());
-		play_sound(&assets.sounds.get("fart0").expect("Could not load fart sound"), PlaySoundParams::default());
+	pub fn new(rect: Rect, d: f32, ivel: f32, assets: &AssetManager) -> Self {
+		let mut rng = ::rand::thread_rng();
+		let n = rng.gen_range(0..=11);
+		play_sound(&assets.sounds.get(&format!("fart{}", n)).expect("Could not load fart sound"), PlaySoundParams::default());
+		// play_sound(&assets.sounds.get("fart0").expect("Could not load fart sound"), PlaySoundParams::default());
 
 		Self {
-			pos,
+			pos: vec2(rect.x, rect.y),
 			// moves only horizontally
 			vel: vec2(d * (Self::SPEED + ivel.abs()), 0.),
-			hitbox: Rect::new(pos.x, pos.y, 50., 50.),
+			hitbox: rect,
 			lifetime: 50,
 			current_image: assets.images.get("fart").unwrap().clone(),
 			dead: false,
@@ -99,7 +100,14 @@ impl Entity for Fart {
 				match t {
 					PlaceMode::SpawnGoblin => {
 						if entity.get_hitbox().overlaps(&self.get_hitbox()) {
-							return Some(EventType::Damage{pos: self.pos + vec2(self.hitbox.w / 2., self.hitbox.h / 2.)});
+							// return Some(EventType::Damage{pos: self.pos + vec2(self.hitbox.w / 2., self.hitbox.h / 2.)});
+							return Some(EventType::Damage{rect: self.hitbox});
+						}
+					},
+					PlaceMode::SpawnGobloronBoss => {
+						if entity.get_hitbox().overlaps(&self.get_hitbox()) {
+							return Some(EventType::Damage{rect: self.hitbox});
+							// return Some(EventType::Damage{pos: self.pos + vec2(self.hitbox.w / 2., self.hitbox.h / 2.)});
 						}
 					},
 					PlaceMode::SpawnPlayer => {
@@ -208,7 +216,7 @@ impl Entity for Player {
 
         	// fard.
         	// it gets subtracted by a vec2 because that makes it perfectly centered on the player
-        	r_event = Some(EventType::SpawnFart{pos: self.get_center() - vec2(50., 50.), d, ivel: self.movement_system.vel.x})
+        	r_event = Some(EventType::SpawnFart{rect: Rect::new(self.get_center().x - 50., self.get_center().y - 50., 50., 50.), d, ivel: self.movement_system.vel.x})
         }
 
         // handle physics and stuff
@@ -249,6 +257,19 @@ impl Entity for Player {
 					PlaceMode::SpawnGoblin => {
 						if entity.get_hitbox().overlaps(&self.get_hitbox()) {
 							return Some(EventType::KillPlayer);
+						}
+					},
+					// -- Laser functionality --
+					// The player will check if the distance between himself and the laser is less than Eye::LASER_DIST
+					// Spawn a kill box at laser_point.x + cos(laser_angle) * d, laser_point.y + sin(laser_angle) * d
+					PlaceMode::Laser => {
+						let d = dist(&self.get_center(), &entity.get_pos());
+						if d <= Eye::LASER_DIST {
+							// entity.get_hitbox().w is a lazy way of sneakily getting the angle from a laser
+							let damage_point = vec2(entity.get_pos().x + entity.get_hitbox().w.cos() * d, entity.get_pos().y + entity.get_hitbox().w.sin() * d);
+							if self.get_hitbox().contains(damage_point) {
+								return Some(EventType::KillPlayer);
+							}
 						}
 					},
 					// this is for preventing the player from touching himself
