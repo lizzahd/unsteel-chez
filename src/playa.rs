@@ -264,7 +264,7 @@ impl Entity for Player {
 					// Spawn a kill box at laser_point.x + cos(laser_angle) * d, laser_point.y + sin(laser_angle) * d
 					PlaceMode::Laser => {
 						let d = dist(&self.get_center(), &entity.get_pos());
-						if d <= Eye::LASER_DIST {
+						if d <= entity.get_hitbox().h { // h is distance
 							// entity.get_hitbox().w is a lazy way of sneakily getting the angle from a laser
 							let damage_point = vec2(entity.get_pos().x + entity.get_hitbox().w.cos() * d, entity.get_pos().y + entity.get_hitbox().w.sin() * d);
 							if self.get_hitbox().contains(damage_point) {

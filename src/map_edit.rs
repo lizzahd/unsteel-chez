@@ -402,7 +402,10 @@ pub async fn level_edit() {
                                         }));
                                         covered_events.push(i);
                                     }
-                                }
+                                },
+                                EventType::SpawnGoblin {pos} => {
+                                    to_spawn.push(Box::new(Enemy::new(*pos, &assets)));
+                                },
                                 _ => {}
                             }
 
@@ -439,6 +442,10 @@ pub async fn level_edit() {
 
                     // despawn queued entities
                     for i in to_kill {
+                        if i >= test_entities.len() {
+                            continue;
+                        }
+                        
                         if i == 0 {
                             stop_sound(&test_level.music);
                             play_sound(death_sound, PlaySoundParams::default());
@@ -472,9 +479,9 @@ pub async fn level_edit() {
                                 next_frame().await;
                             }
                         }
-                        if i < test_entities.len() {
-                            test_entities.remove(i);
-                        }
+                        // if i < test_entities.len() {
+                        //     test_entities.remove(i);
+                        // }
                     }
 
                     for hitbox in &mut test_level.collision.rect_hitboxes {
@@ -492,6 +499,13 @@ pub async fn level_edit() {
                     if is_key_pressed(KeyCode::Escape) {
                         stop_sound(&test_level.music);
                         break 'test_loop;
+                    }
+
+                    let minimum_frame_time = 1. / 60.; // 60 FPS
+                    let frame_time = get_frame_time();
+                    if frame_time < minimum_frame_time {
+                        let time_to_sleep = (minimum_frame_time - frame_time) * 1000.;
+                        std::thread::sleep(std::time::Duration::from_millis(time_to_sleep as u64));
                     }
 
                     // set the last mouse position

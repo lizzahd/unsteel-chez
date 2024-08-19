@@ -124,6 +124,16 @@ impl Entity for Enemy {
 							r_event = Some(EventType::PlayerSpotted{pos: entity.get_pos().clone()});
 						}
 					},
+					PlaceMode::Laser => {
+						let d = dist(&self.get_pos(), &entity.get_pos());
+						if d <= entity.get_hitbox().h {
+							// entity.get_hitbox().w is a lazy way of sneakily getting the angle from a laser
+							let damage_point = vec2(entity.get_pos().x + entity.get_hitbox().w.cos() * d, entity.get_pos().y + entity.get_hitbox().w.sin() * d);
+							if self.get_hitbox().contains(damage_point) {
+								return Some(EventType::Damage{rect: Rect::new(damage_point.x - 5., damage_point.y - 5., 10., 10.)});
+							}
+						}
+					},
 					_ => {}
 				}
 			}
@@ -145,7 +155,7 @@ impl Entity for Enemy {
 				if dist(pos, &self.get_pos()) <= Self::DETECTION_RADIUS {
 					self.target_position = Some(*pos);
 				}
-			}
+			},
 			_ => {}
 		}
 	}
@@ -171,6 +181,8 @@ pub struct GobloronBoss {
 }
 
 impl GobloronBoss {
+	const MOUTH_POS: Vec2 = vec2(1954., 258.);
+
 	pub fn new(assets: &AssetManager) -> Self {
 		Self {
 			hitbox: Rect::new(1939., 56., 570., 592.),
@@ -196,7 +208,7 @@ impl Entity for GobloronBoss {
 
 		let mut e_result: Option<EventType> = None;
 
-		e_result = self.eye.update();
+		// e_result = self.eye.update();
 
         self.left_nip.update();
         if self.left_nip.fire_cool > 0 {
@@ -208,7 +220,7 @@ impl Entity for GobloronBoss {
         		start_pos: self.left_nip.pos + Nip::NIPPLE_POINT,
         		angle: PI,
         		speed: 0.,
-        		distance: 1000.,
+        		distance: self.left_nip.pos.x,
         		duration: self.left_nip.firing_duration,
         	});
         	self.left_nip.spawned_laser = true;
@@ -219,7 +231,7 @@ impl Entity for GobloronBoss {
         		start_pos: self.right_nip.pos + Nip::NIPPLE_POINT,
         		angle: PI,
         		speed: 0.,
-        		distance: 1000.,
+        		distance: self.right_nip.pos.x,
         		duration: self.right_nip.firing_duration,
         	});
         	self.right_nip.spawned_laser = true;
@@ -229,7 +241,7 @@ impl Entity for GobloronBoss {
 
 		if e_result.is_none() {
 			if ::rand::thread_rng().gen_range(0..=1000) < 3 {
-				println!("Spawning new goblin from mouth");
+				e_result = Some(EventType::SpawnGoblin{pos: Self::MOUTH_POS.clone()});
 			}
 		}
 
@@ -288,7 +300,7 @@ impl Entity for GobloronBoss {
 		Box::new(self.clone())
 	}
 
-	fn give_data(&self, _level: &Level, entities: &Vec<Box<dyn Entity>>) -> Option<EventType> {
+	fn give_data(&self, _level: &Level, _entities: &Vec<Box<dyn Entity>>) -> Option<EventType> {
 		// Manually check nipple lasers for player detection
 		let mut e_result: Option<EventType> = None;
 
@@ -492,7 +504,7 @@ impl Entity for Laser {
 	}
 
 	fn get_hitbox(&self) -> Rect {
-		Rect::new(self.start_pos.x, self.start_pos.y, self.angle, 0.) // returns angle disguised as Rect.w
+		Rect::new(self.start_pos.x, self.start_pos.y, self.angle, self.distance) // returns angle disguised as Rect.w
 	}
 
 	fn get_pos(&self) -> Vec2 {
@@ -535,7 +547,7 @@ struct Nip {
 }
 
 impl Nip {
-	const MAX_FIRE_COOL: i32 = 10000;
+	const MAX_FIRE_COOL: i32 = 1000; // 10000 is good
 	const MAX_WARMUP_DURATION: i32 = 200;
 	const MAX_FIRE_DURATION: i32 = 100;
 	const NIPPLE_POINT: Vec2 = vec2(3., 14.);
